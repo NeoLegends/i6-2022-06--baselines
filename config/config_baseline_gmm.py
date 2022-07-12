@@ -17,7 +17,7 @@ from .lbs import get_data_lstm_lm, get_data_4gram_lm
 
 
 def _run(mode, train_data_inputs, dev_data_inputs, test_data_inputs):
-    print(f"configuring GMM pipeline w/ {mode} LM")
+    print(f"GMM {mode} LM")
 
     mfcc_cepstrum_options = {
         "normalize": False,
@@ -61,8 +61,6 @@ def _run(mode, train_data_inputs, dev_data_inputs, test_data_inputs):
 
 
 def run_gmm():
-    print("GMM")
-
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
