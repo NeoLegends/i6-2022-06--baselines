@@ -1,0 +1,6 @@
+alias/
+output/
+recipe/
+sisyphus/
+__pycache__/
+*.pyc
