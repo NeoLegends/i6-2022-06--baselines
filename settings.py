@@ -1,10 +1,9 @@
 import getpass
+import os
 import sys
 
 
-
 sys.path.append('/work/asr4/raissi/dev/cachemanager/')
-
 
 WORK_DIR = 'work'
 IMPORT_PATHS = ['config', 'recipe', 'recipe/']
@@ -65,7 +64,7 @@ RETURNN_PYTHON_EXE='/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/py
 #RETURNN_PYTHON_HOME = '/u/beck/programs/python/2.7.10/'
 #RETURNN_PYTHON_EXE  = '/u/beck/programs/python/2.7.10/bin/python2.7'
 #RETURNN_ROOT        = '/u/raissi/setups/swb/crnn/'
-RETURNN_ROOT        = '/u/raissi/dev/returnn_packages/returnn/'
+RETURNN_ROOT        = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recipe/returnn")
 
 RASR_PYTHON_HOME = '/work/tools/asr/python/3.8.0'
 RASR_PYTHON_EXE  = '/work/tools/asr/python/3.8.0/bin/python3.8'

@@ -16,8 +16,8 @@ import i6_experiments.users.raissi.experiments.librispeech.data_preparation.othe
 from .lbs import get_data_lstm_lm, get_data_4gram_lm
 
 
-def _run(mode, train_data_inputs, dev_data_inputs, test_data_inputs):
-    print(f"GMM {mode} LM")
+def _run_gmm(lm: str, train_data_inputs, dev_data_inputs, test_data_inputs) -> gmm_system.GmmSystem:
+    print(f"GMM {lm} LM")
 
     mfcc_cepstrum_options = {
         "normalize": False,
@@ -59,8 +59,10 @@ def _run(mode, train_data_inputs, dev_data_inputs, test_data_inputs):
     )
     lbs_gmm_system.run(steps)
 
+    return lbs_gmm_system
 
-def run_gmm():
+
+def run_gmm() -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
@@ -68,8 +70,12 @@ def run_gmm():
 
     # ******************** GMM Init ********************
 
-    train_4gram, dev_4gram, test_4gram = get_data_4gram_lm()
-    train_lstm, dev_lstm, test_lstm = get_data_lstm_lm()
+    with tk.block("4gram"):
+        train_4gram, dev_4gram, test_4gram = get_data_4gram_lm()
+        gmm_4gram = _run_gmm("4gram", train_4gram, dev_4gram, test_4gram)
 
-    _run("4gram", train_4gram, dev_4gram, test_4gram)
-    _run("lstm", train_lstm, dev_lstm, test_lstm)
+    with tk.block("lstm"):
+        train_lstm, dev_lstm, test_lstm = get_data_lstm_lm()
+        gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
+
+    return gmm_4gram, gmm_lstm
