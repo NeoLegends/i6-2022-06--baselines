@@ -5,10 +5,13 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
+from i6_core.mm import AlignmentJob
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
 import i6_core.corpus as corpus_recipe
+from i6_core.lexicon import StoreAllophonesJob
+from i6_core.meta import CartAndLDA
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
 import i6_core.text as text
@@ -161,11 +164,15 @@ def _run_hybrid(
     n_phones: int,
     gmm_system: GmmSystem,
 ) -> HybridSystem:
+    assert n_phones in [1, 2, 3]
+
     print(f"Hybrid {n_phones_to_str(n_phones)} {lm}")
 
     # ******************** Data Prep ********************
 
-    train_corpus_path = gmm_system.corpora["train-other-960"].corpus_file
+    corpus_name = "train-other-960"
+
+    train_corpus_path = gmm_system.corpora[corpus_name].corpus_file
     total_train_num_segments = 281241
     cv_size = 3000 / total_train_num_segments
 
@@ -184,12 +191,21 @@ def _run_hybrid(
 
     # ******************** Train Prep ********************
 
-    train_output = gmm_system.outputs["train-other-960"]["final"]
+    train_output = gmm_system.outputs[corpus_name]["final"]
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
         shuffle_data=True
     )
     nn_train_data.update_crp_with(segment_path=train_segments, concurrent=1)
+
+    if n_phones == 1:
+        align = gmm_system.jobs[corpus_name]["train_mono"].selected_alignments[-1]
+    elif n_phones == 2:
+        raise NotImplementedError("diphones not supported yet")
+    else:
+        # use Raissi triphone alignment (for now)
+        align = tk.path(RAISSI_ALIGNMENT)
+    nn_train_data.alignments = align
 
     nn_cv_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_cv_data.update_crp_with(segment_path=cv_segments, concurrent=1)
@@ -198,13 +214,13 @@ def _run_hybrid(
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
 
     nn_train_data_inputs = {
-        "train-other-960.train": nn_train_data,
+        f"{corpus_name}.train": nn_train_data,
     }
     nn_cv_data_inputs = {
-        "train-other-960.cv": nn_cv_data,
+        f"{corpus_name}.cv": nn_cv_data,
     }
     nn_devtrain_data_inputs = {
-        "train-other-960.devtrain": nn_devtrain_data,
+        f"{corpus_name}.devtrain": nn_devtrain_data,
     }
 
     # ******************** Test Prep ********************
@@ -242,10 +258,20 @@ def _run_hybrid(
         devtrain_data=nn_devtrain_data_inputs,
         dev_data=nn_dev_data_inputs,
         test_data=nn_test_data_inputs,
-        train_cv_pairing=[tuple(["train-other-960.train", "train-other-960.cv"])],
+        train_cv_pairing=[tuple([f"{corpus_name}.train", f"{corpus_name}.cv"])],
     )
 
-    n_outputs = 12001 if n_phones == 3 else 41
+    if n_phones == 1:
+        allophones_job: StoreAllophonesJob = gmm_system.jobs["base"]["allophones"]
+        n_outputs = allophones_job.out_num_monophone_states
+    elif n_phones == 2:
+        raise NotImplementedError("diphones not supported yet")
+    else:
+        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
+            f"cart_and_lda_{corpus_name}_mono"
+        ]
+        n_outputs = cart_job.last_num_cart_labels
+
     nn_args = get_nn_args(num_outputs=n_outputs)
 
     embed()
