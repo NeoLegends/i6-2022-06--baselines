@@ -5,12 +5,13 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
+from i6_core.mm import AlignmentJob
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
 import i6_core.corpus as corpus_recipe
 from i6_core.lexicon import StoreAllophonesJob
-from i6_core.meta import CartAndLDA
+from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
 import i6_core.text as text
@@ -219,7 +220,10 @@ def _run_hybrid(
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
 
     if n_phones == 1:
-        align = gmm_system.jobs[corpus_name]["train_mono"].selected_alignments[-1]
+        alignment_job: AlignSplitAccumulateSequence = gmm_system.jobs[corpus_name][
+            "train_mono"
+        ]
+        align = alignment_job.selected_alignment_jobs[-1].out_alignment_bundle
     elif n_phones == 2:
         raise NotImplementedError("diphones not supported yet")
     else:
