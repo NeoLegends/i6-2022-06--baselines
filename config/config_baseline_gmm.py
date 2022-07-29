@@ -77,8 +77,8 @@ def run_gmm() -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
         train_4gram, dev_4gram, test_4gram = get_data_4gram_lm()
         gmm_4gram = _run_gmm("4gram", train_4gram, dev_4gram, test_4gram)
 
-    with tk.block("lstm"):
-        train_lstm, dev_lstm, test_lstm = get_data_lstm_lm()
-        gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
+    # with tk.block("lstm"):
+    #     train_lstm, dev_lstm, test_lstm = get_data_lstm_lm()
+    #     gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
 
-    return gmm_4gram, gmm_lstm
+    return gmm_4gram, None
