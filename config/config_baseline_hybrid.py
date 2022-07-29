@@ -117,6 +117,10 @@ def get_returnn_config(
         num_enc_layers=12,
         enc_args=encoder_args,
     )
+    network = attention_for_hybrid(**network_args).get_network()
+
+    # For recognition the network's output layer needs to know the dimension
+    network["output"]["n_out"] = num_outputs
 
     base_config = {
         "use_tensorflow": True,
@@ -143,7 +147,7 @@ def get_returnn_config(
         "newbob_learning_rate_decay": 0.9,
         "newbob_multi_num_epochs": 40,
         "newbob_multi_update_interval": 1,
-        "network": attention_for_hybrid(**network_args).get_network(),
+        "network": network,
     }
 
     base_post_config = {
