@@ -256,7 +256,7 @@ def _run_hybrid(
         train_cv_pairing=[tuple(["train-other-960.train", "train-other-960.cv"])],
     )
 
-    n_outputs = 12001
+    n_outputs = 12001 if n_phones == 3 else 41
     nn_args = get_nn_args(num_outputs=n_outputs)
 
     steps = rasr_util.RasrSteps()
@@ -282,10 +282,10 @@ def run_hybrid(
 
     results = {}
 
-    _run_hybrid(gmm_4gram, 3, gmm_sys)
-    # for lm, gmm_sys in lm.items():
-    #     for n_phone in n_phones:
-    #         with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
-    #             results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
+    for lm, gmm_sys in lm.items():
+        for n_phone in n_phones:
+            with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
+                results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
+                return results
 
     return results
