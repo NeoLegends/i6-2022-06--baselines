@@ -48,66 +48,11 @@ def n_phones_to_str(n_phones: int) -> str:
         raise ValueError(f"n_phones must be either 1, 2 or 3, not {n_phones}")
 
 
-def get_nn_args(num_outputs: int, num_epochs: int = 500):
-    returnn_config = get_returnn_config(
-        num_inputs=50, num_outputs=num_outputs, batch_size=24000, num_epochs=num_epochs
-    )
-
-    training_args = {
-        "log_verbosity": 4,
-        "num_epochs": num_epochs,
-        "num_classes": num_outputs,
-        "save_interval": 1,
-        "keep_epochs": None,
-        "time_rqmt": 168,
-        "mem_rqmt": 7,
-        "cpu_rqmt": 3,
-        "partition_epochs": {"train": 20, "dev": 1},
-        "use_python_control": False,
-    }
-    recognition_args = {
-        "dev-other": {
-            "epochs": list(np.arange(250, num_epochs + 1, 10)),
-            "feature_flow_key": "gt",
-            "prior_scales": [0.3],
-            "pronunciation_scales": [6.0],
-            "lm_scales": [20.0],
-            "lm_lookahead": True,
-            "lookahead_options": None,
-            "create_lattice": True,
-            "eval_single_best": True,
-            "eval_best_in_lattice": True,
-            "search_parameters": get_search_parameters(),
-            "lattice_to_ctm_kwargs": {
-                "fill_empty_segments": True,
-                "best_path_algo": "bellman-ford",
-            },
-            "optimize_am_lm_scale": False,
-            "rtf": 50,
-            "mem": 8,
-            "parallelize_conversion": True,
-        },
-    }
-    test_recognition_args = None
-
-    returnn_configs = {"conf": returnn_config}
-
-    nn_args = rasr_util.HybridArgs(
-        returnn_training_configs=returnn_configs,
-        returnn_recognition_configs=returnn_configs,
-        training_args=training_args,
-        recognition_args=recognition_args,
-        test_recognition_args=test_recognition_args,
-    )
-
-    return nn_args
-
-
 def get_returnn_config(
     num_inputs: int,
     num_outputs: int,
-    batch_size: int,
     num_epochs: int,
+    batch_size: int = 10000,
 ) -> returnn.ReturnnConfig:
     encoder_args = get_encoder_args(4, 64, 64, 256, 1024, 32)
     network_args = get_network_args(
@@ -171,6 +116,61 @@ def get_returnn_config(
     )
 
     return returnn_cfg
+
+
+def get_nn_args(num_outputs: int, num_epochs: int = 500):
+    returnn_config = get_returnn_config(
+        num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs
+    )
+
+    training_args = {
+        "log_verbosity": 4,
+        "num_epochs": num_epochs,
+        "num_classes": num_outputs,
+        "save_interval": 1,
+        "keep_epochs": None,
+        "time_rqmt": 168,
+        "mem_rqmt": 7,
+        "cpu_rqmt": 3,
+        "partition_epochs": {"train": 20, "dev": 1},
+        "use_python_control": False,
+    }
+    recognition_args = {
+        "dev-other": {
+            "epochs": list(np.arange(250, num_epochs + 1, 10)),
+            "feature_flow_key": "gt",
+            "prior_scales": [0.3],
+            "pronunciation_scales": [6.0],
+            "lm_scales": [20.0],
+            "lm_lookahead": True,
+            "lookahead_options": None,
+            "create_lattice": True,
+            "eval_single_best": True,
+            "eval_best_in_lattice": True,
+            "search_parameters": get_search_parameters(),
+            "lattice_to_ctm_kwargs": {
+                "fill_empty_segments": True,
+                "best_path_algo": "bellman-ford",
+            },
+            "optimize_am_lm_scale": False,
+            "rtf": 50,
+            "mem": 8,
+            "parallelize_conversion": True,
+        },
+    }
+    test_recognition_args = None
+
+    returnn_configs = {"conf": returnn_config}
+
+    nn_args = rasr_util.HybridArgs(
+        returnn_training_configs=returnn_configs,
+        returnn_recognition_configs=returnn_configs,
+        training_args=training_args,
+        recognition_args=recognition_args,
+        test_recognition_args=test_recognition_args,
+    )
+
+    return nn_args
 
 
 def _run_hybrid(
