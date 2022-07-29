@@ -305,6 +305,5 @@ def run_hybrid(
         for n_phone in N_PHONES:
             with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
                 results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
-                return results
 
     return results
