@@ -277,7 +277,7 @@ def _run_hybrid(
 
     nn_args = get_nn_args(num_outputs=n_outputs)
 
-    embed()
+    # embed()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
