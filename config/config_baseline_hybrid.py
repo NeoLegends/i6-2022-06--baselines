@@ -210,7 +210,7 @@ def _run_hybrid(
         raise NotImplementedError("diphones not supported yet")
     else:
         # use Raissi triphone alignment (for now)
-        align = tk.path(RAISSI_ALIGNMENT)
+        align = tk.Path(RAISSI_ALIGNMENT)
 
     nn_train_data.alignments = align
     nn_devtrain_data.alignments = align
