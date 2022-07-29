@@ -185,27 +185,17 @@ def _run_hybrid(
     # ******************** Train Prep ********************
 
     train_output = gmm_system.outputs["train-other-960"]["final"]
-    cart_cfg = {
-        "type": "cart",
-        "file": gmm_system.cart_trees["train-other-960"],
-    }
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
         shuffle_data=True
     )
     nn_train_data.update_crp_with(segment_path=train_segments, concurrent=1)
 
-    # This even needed? GmmSystem automatically sets CRPs to CART after running
-    # the CART step.
-    nn_train_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
-
     nn_cv_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_cv_data.update_crp_with(segment_path=cv_segments, concurrent=1)
-    nn_cv_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
 
     nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
-    nn_devtrain_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
 
     nn_train_data_inputs = {
         "train-other-960.train": nn_train_data,
