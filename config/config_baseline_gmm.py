@@ -16,7 +16,9 @@ import i6_experiments.users.raissi.experiments.librispeech.data_preparation.othe
 from .lbs import get_data_lstm_lm, get_data_4gram_lm
 
 
-def _run_gmm(lm: str, train_data_inputs, dev_data_inputs, test_data_inputs) -> gmm_system.GmmSystem:
+def _run_gmm(
+    lm: str, train_data_inputs, dev_data_inputs, test_data_inputs
+) -> gmm_system.GmmSystem:
     print(f"GMM {lm} LM")
 
     mfcc_cepstrum_options = {
@@ -33,7 +35,8 @@ def _run_gmm(lm: str, train_data_inputs, dev_data_inputs, test_data_inputs) -> g
     init_args = data_setups.get_init_args(
         dc_detection=False,
         mfcc_cepstrum_options=mfcc_cepstrum_options,
-        gt_options_extra_args=gt_options_extra_args)
+        gt_options_extra_args=gt_options_extra_args,
+    )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
     cart_args = gmm_setups.get_cart_args()
