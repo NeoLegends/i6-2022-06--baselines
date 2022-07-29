@@ -26,6 +26,7 @@ from recipe.i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
 )
+from .lbs import RAISSI_ALIGNMENT
 
 
 def n_phones_to_str(n_phones: int) -> str:
@@ -200,11 +201,11 @@ def _run_hybrid(
 
     nn_cv_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_cv_data.update_crp_with(segment_path=cv_segments, concurrent=1)
-    nn_train_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
+    nn_cv_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
 
     nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
-    nn_train_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
+    nn_devtrain_data.crp.acoustic_model_config.state_tying = copy.deepcopy(cart_cfg)
 
     nn_train_data_inputs = {
         "train-other-960.train": nn_train_data,
@@ -235,8 +236,6 @@ def _run_hybrid(
         ].as_returnn_rasr_data_input(),
     }
 
-    embed()
-
     # ******************** System Init ********************
 
     hybrid_init_args = lbs_data_setups.get_init_args(
@@ -258,6 +257,8 @@ def _run_hybrid(
 
     n_outputs = 12001 if n_phones == 3 else 41
     nn_args = get_nn_args(num_outputs=n_outputs)
+
+    embed()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
