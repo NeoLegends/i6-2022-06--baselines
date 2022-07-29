@@ -198,6 +198,12 @@ def _run_hybrid(
     )
     nn_train_data.update_crp_with(segment_path=train_segments, concurrent=1)
 
+    nn_cv_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
+    nn_cv_data.update_crp_with(segment_path=cv_segments, concurrent=1)
+
+    nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
+    nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
+
     if n_phones == 1:
         align = gmm_system.jobs[corpus_name]["train_mono"].selected_alignments[-1]
     elif n_phones == 2:
@@ -205,13 +211,10 @@ def _run_hybrid(
     else:
         # use Raissi triphone alignment (for now)
         align = tk.path(RAISSI_ALIGNMENT)
+
     nn_train_data.alignments = align
-
-    nn_cv_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
-    nn_cv_data.update_crp_with(segment_path=cv_segments, concurrent=1)
-
-    nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
-    nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
+    nn_devtrain_data.alignments = align
+    nn_cv_data.alignments = align
 
     nn_train_data_inputs = {
         f"{corpus_name}.train": nn_train_data,
