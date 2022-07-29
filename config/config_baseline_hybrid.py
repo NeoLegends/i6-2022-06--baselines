@@ -22,14 +22,20 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_base_args as lbs_data_setups
 
-from i6_private.users.gunz.system_librispeech.transformer_network import (
-    attention_for_hybrid,
-)
-from recipe.i6_private.users.gunz.system_librispeech.get_network_args import (
+from i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
 )
-from .config import (N_PHONES, RAISSI_ALIGNMENT)
+from i6_private.users.gunz.system_librispeech.specaugment_new import (
+    mask as sa_mask,
+    random_mask as sa_random_mask,
+    summary as sa_summary,
+    transform as sa_transform,
+)
+from i6_private.users.gunz.system_librispeech.transformer_network import (
+    attention_for_hybrid,
+)
+from .config import N_PHONES, RAISSI_ALIGNMENT
 
 
 def n_phones_to_str(n_phones: int) -> str:
@@ -152,7 +158,15 @@ def get_returnn_config(
         config=base_config,
         post_config=base_post_config,
         hash_full_python_code=True,
-        python_prolog={"numpy": "import numpy as np"},
+        python_prolog={
+            "numpy": "import numpy as np",
+            "functions": [
+                sa_mask,
+                sa_random_mask,
+                sa_summary,
+                sa_transform,
+            ],
+        },
         pprint_kwargs={"sort_dicts": False},
     )
 
