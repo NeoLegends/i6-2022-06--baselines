@@ -5,7 +5,6 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from i6_core.mm import AlignmentJob
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -118,9 +117,6 @@ def get_returnn_config(
         enc_args=encoder_args,
     )
     network = attention_for_hybrid(**network_args).get_network()
-
-    # For recognition the network's output layer needs to know the dimension
-    network["output"]["n_out"] = num_outputs
 
     base_config = {
         "use_tensorflow": True,
