@@ -270,7 +270,7 @@ def _run_hybrid(
 
 def run_hybrid(
     gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
-) -> typing.Dict[(int, str), HybridSystem]:
+) -> typing.Dict[typing.Tuple[int, str], HybridSystem]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
