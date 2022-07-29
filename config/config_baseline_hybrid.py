@@ -186,7 +186,7 @@ def _run_hybrid(
     train_output = gmm_system.outputs["train-other-960"]["final"]
     cart_cfg = {
         "type": "cart",
-        "file": gmm_system.cart_trees["train-other-960"]["final"],
+        "file": gmm_system.cart_trees["train-other-960"],
     }
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
@@ -235,6 +235,8 @@ def _run_hybrid(
         ].as_returnn_rasr_data_input(),
     }
 
+    embed()
+
     # ******************** System Init ********************
 
     hybrid_init_args = lbs_data_setups.get_init_args(
@@ -256,9 +258,6 @@ def _run_hybrid(
 
     n_outputs = 12001
     nn_args = get_nn_args(num_outputs=n_outputs)
-
-    embed()
-    return
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
@@ -283,9 +282,10 @@ def run_hybrid(
 
     results = {}
 
-    for lm, gmm_sys in lm.items():
-        for n_phone in n_phones:
-            with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
-                results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
+    _run_hybrid(gmm_4gram, 3, gmm_sys)
+    # for lm, gmm_sys in lm.items():
+    #     for n_phone in n_phones:
+    #         with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
+    #             results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
 
     return results
