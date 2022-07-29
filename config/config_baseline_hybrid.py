@@ -268,8 +268,8 @@ def run_hybrid(
 
     # ******************** GMM Init ********************
 
-    n_phones = [1, 2, 3]
-    lm = {"4gram": gmm_4gram, "lstm": gmm_lstm}
+    n_phones = [1, 3], #2]
+    lm = {"4gram": gmm_4gram}#, "lstm": gmm_lstm}
 
     results = {}
 
