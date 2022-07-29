@@ -29,7 +29,7 @@ from recipe.i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
 )
-from .lbs import RAISSI_ALIGNMENT
+from .config import (N_PHONES, RAISSI_ALIGNMENT)
 
 
 def n_phones_to_str(n_phones: int) -> str:
@@ -294,13 +294,12 @@ def run_hybrid(
 
     # ******************** GMM Init ********************
 
-    n_phones = [1, 3], #2]
-    lm = {"4gram": gmm_4gram}#, "lstm": gmm_lstm}
+    lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
 
     results = {}
 
     for lm, gmm_sys in lm.items():
-        for n_phone in n_phones:
+        for n_phone in N_PHONES:
             with tk.block(f"{n_phones_to_str(n_phone)} {lm}"):
                 results[n_phone, lm] = _run_hybrid(lm, n_phone, gmm_sys)
                 return results

@@ -4,9 +4,6 @@ import i6_experiments.common.datasets.librispeech as lbs_dataset
 import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_base_args as data_setups
 
 
-RAISSI_ALIGNMENT = "/work/asr4/raissi/setups/librispeech/960-ls/work/i6_core/mm/alignment/AlignmentJob.hK21a0UU4iiJ/output/alignment.cache.bundle"
-
-
 def get_data_4gram_lm():
     return data_setups.get_data_inputs()
 
