@@ -224,6 +224,10 @@ def _run_hybrid(
             "train_mono"
         ]
         align = alignment_job.selected_alignment_jobs[-1].out_alignment_bundle
+
+        nn_train_data.crp.acoustic_model_config.state_typing = "monophone"
+        nn_devtrain_data.crp.acoustic_model_config.state_typing = "monophone"
+        nn_cv_data.crp.acoustic_model_config.state_typing = "monophone"
     elif n_phones == 2:
         raise NotImplementedError("diphones not supported yet")
     else:
@@ -233,6 +237,8 @@ def _run_hybrid(
     nn_train_data.alignments = align
     nn_devtrain_data.alignments = align
     nn_cv_data.alignments = align
+
+    embed()
 
     nn_train_data_inputs = {
         f"{corpus_name}.train": nn_train_data,
