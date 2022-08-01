@@ -417,7 +417,7 @@ def _run_hybrid(
         ]
         n_outputs = cart_job.last_num_cart_labels
 
-    nn_args = get_nn_args(num_outputs=n_outputs)
+    nn_args = get_nn_args(num_outputs=n_outputs.get())
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
