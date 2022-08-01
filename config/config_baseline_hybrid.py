@@ -174,7 +174,7 @@ def get_returnn_common_args(
         dim_tags=[
             serialization.DimInitArgs(name=f"{data_name}_time", dim=None),
             serialization.DimInitArgs(
-                name=f"{data_name}", dim=num_inputs, is_feature=True
+                name=f"{data_name}_feature", dim=num_inputs, is_feature=True
             ),
         ],
         sparse_dim=None,
@@ -209,10 +209,12 @@ def get_returnn_common_args(
         },
     )
     rc_serializer = serialization.Collection(
-        make_local_package_copy=True,
+        make_local_package_copy=False,
         packages={model_base},
-        returnn_common_root=os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "recipe/returnn_common"
+        returnn_common_root=tk.Path(
+            os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "recipe/returnn_common"
+            )
         ),
         serializer_objects=[
             rc_recursion_limit,
