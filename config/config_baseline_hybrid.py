@@ -149,6 +149,8 @@ def get_returnn_common_args(
         "newbob_learning_rate_decay": 0.9,
         "newbob_multi_num_epochs": 40,
         "newbob_multi_update_interval": 1,
+        ############
+        "network": {},
     }
     post_config = {
         "use_tensorflow": True,
@@ -341,8 +343,6 @@ def _run_hybrid(
     nn_devtrain_data.alignments = align
     nn_cv_data.alignments = align
 
-    embed()
-
     nn_train_data_inputs = {
         f"{corpus_name}.train": nn_train_data,
     }
@@ -404,7 +404,7 @@ def _run_hybrid(
 
     nn_args = get_nn_args(num_outputs=n_outputs)
 
-    # embed()
+    embed()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
