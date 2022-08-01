@@ -194,8 +194,9 @@ def get_returnn_common_args(
     rc_network = serialization.Network(
         rc_create_model.object_name,
         {
-            "audio_data": "data",
             "spatial_dim": "data_time",
+            "features_data": "data",
+            "target_data": "classes",
         },
         {
             "num_blocks": 12,
