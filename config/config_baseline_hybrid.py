@@ -21,8 +21,8 @@ from i6_experiments.common.setups.rasr import GmmSystem, ReturnnRasrDataInput
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
-import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_base_args as lbs_data_setups
 
+import i6_private.users.gunz.rasr.ls_base_args as lbs_data_setups
 from i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
@@ -167,24 +167,22 @@ def get_returnn_common_args(
         },
     }
 
-    data_name = "data"
-    classes_name = "classes"
     data_dim = serialization.DataInitArgs(
-        name=f"{data_name}",
+        name="data",
         dim_tags=[
-            serialization.DimInitArgs(name=f"{data_name}_time", dim=None),
+            serialization.DimInitArgs(name="data_time", dim=None),
             serialization.DimInitArgs(
-                name=f"{data_name}_feature", dim=num_inputs, is_feature=True
+                name="data_feature", dim=num_inputs, is_feature=True
             ),
         ],
         sparse_dim=None,
         available_for_inference=True,
     )
     classes_dim = serialization.DataInitArgs(
-        name=f"{classes_name}",
-        dim_tags=[serialization.DimInitArgs(name=f"{classes_name}_time", dim=None)],
+        name="classes",
+        dim_tags=[serialization.DimInitArgs(name="classes_time", dim=None)],
         sparse_dim=serialization.DimInitArgs(
-            name=f"{classes_name}_idx", dim=num_outputs, is_feature=True
+            name="classes_idx", dim=num_outputs, is_feature=True
         ),
         available_for_inference=True,
     )
@@ -397,9 +395,10 @@ def _run_hybrid(
         }
     )
 
-    lbs_hy_system = HybridSystem()
+    rasr_path = os.path.join(gs.RASR_ROOT, "arch", gs.RASR_ARCH)
+    lbs_hy_system = HybridSystem(rasr_binary_path=tk.Path(rasr_path))
     lbs_hy_system.init_system(
-        hybrid_init_args=hybrid_init_args,
+        rasr_init_args=hybrid_init_args,
         train_data=nn_train_data_inputs,
         cv_data=nn_cv_data_inputs,
         devtrain_data=nn_devtrain_data_inputs,
@@ -409,7 +408,7 @@ def _run_hybrid(
     )
 
     if n_phones == 1:
-        allophones_job: StoreAllophonesJob = gmm_system.jobs["base"]["allophones"]
+        allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"]["allophones"]
         n_outputs = allophones_job.out_num_monophone_states
     elif n_phones == 2:
         raise NotImplementedError("diphones not supported yet")

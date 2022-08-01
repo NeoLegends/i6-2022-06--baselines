@@ -56,7 +56,7 @@ def _run_gmm(
     rasr_path = os.path.join(gs.RASR_ROOT, "arch", gs.RASR_ARCH)
     lbs_gmm_system = gmm_system.GmmSystem(rasr_binary_path=tk.Path(rasr_path))
     lbs_gmm_system.init_system(
-        hybrid_init_args=init_args,
+        rasr_init_args=init_args,
         train_data=train_data_inputs,
         dev_data=dev_data_inputs,
         test_data=test_data_inputs,
