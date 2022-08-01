@@ -10,8 +10,9 @@ import i6_core.rasr as rasr
 
 import i6_experiments.common.setups.rasr.gmm_system as gmm_system
 import i6_experiments.common.setups.rasr.util as rasr_util
-import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_base_args as data_setups
 import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_gmm_args as gmm_setups
+
+import i6_private.users.gunz.rasr.ls_base_args as data_setups
 
 from .lbs import get_data_lstm_lm, get_data_4gram_lm
 
