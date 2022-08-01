@@ -5,7 +5,7 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from i6_core.mm import AlignmentJob
+from returnn_common import nn
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -16,6 +16,7 @@ import i6_core.returnn as returnn
 import i6_core.rasr as rasr
 import i6_core.text as text
 
+from i6_experiments.common.setups.returnn_common import serialization
 from i6_experiments.common.setups.rasr import GmmSystem, ReturnnRasrDataInput
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
@@ -35,6 +36,9 @@ from i6_private.users.gunz.system_librispeech.specaugment_new import (
 from i6_private.users.gunz.system_librispeech.transformer_network import (
     attention_for_hybrid,
 )
+
+from i6_private.users.gunz.conformer import Conformer
+
 from .config import N_PHONES, RAISSI_ALIGNMENT
 
 
@@ -76,7 +80,7 @@ def get_returnn_config(
             "data": {"dim": num_inputs},
             "classes": {"dim": num_outputs, "sparse": True},
         },
-        "batch_size": batch_size,  # {"classes": batch_size, "data": batch_size},
+        "batch_size": batch_size,
         "chunking": "100:50",
         "optimizer": {"class": "nadam"},
         "optimizer_epsilon": 1e-8,
@@ -119,8 +123,106 @@ def get_returnn_config(
     return returnn_cfg
 
 
+def get_returnn_common_args(
+    num_inputs: int,
+    num_outputs: int,
+    num_epochs: int,
+    batch_size: int = 12500,
+) -> returnn.ReturnnConfig:
+    config = {
+        "behavior_version": 12,
+        ############
+        "optimizer": {"class": "adam", "epsilon": 1e-8},
+        "update_on_device": True,
+        "batch_size": batch_size,
+        "chunking": "100:50",
+        "optimizer_epsilon": 1e-8,
+        "gradient_noise": 0.1,
+        "window": 1,
+        ############
+        "learning_rates": returnn.CodeWrapper("list(np.linspace(3e-4, 8e-4, 10))"),
+        "learning_rate_control": "newbob_multi_epoch",
+        "learning_rate_control_min_num_epochs_per_new_lr": 3,
+        "learning_rate_control_relative_error_relative_lr": True,
+        "min_learning_rate": 1e-5,
+        ############
+        "newbob_learning_rate_decay": 0.9,
+        "newbob_multi_num_epochs": 40,
+        "newbob_multi_update_interval": 1,
+    }
+    post_config = {
+        "use_tensorflow": True,
+        "tf_log_memory_usage": True,
+        "stop_on_nonfinite_train_score": True,
+        "log_batch_size": True,
+        "debug_print_layer_output_template": True,
+        "cache_size": "0",
+        "cleanup_old_models": {
+            "keep_last_n": 5,
+            "keep_best_n": 5,
+            "keep": returnn.CodeWrapper(f"list(np.arange(10, {num_epochs + 1}, 10))"),
+        },
+    }
+
+    data_name = "data"
+    classes_name = "classes"
+    data_dim = serialization.DataInitArgs(
+        name=f"{data_name}",
+        dim_tags=[
+            serialization.DimInitArgs(name=f"{data_name}_time", dim=None),
+            serialization.DimInitArgs(
+                name=f"{data_name}", dim=num_inputs, is_feature=True
+            ),
+        ],
+        sparse_dim=None,
+        available_for_inference=True,
+    )
+    classes_dim = serialization.DataInitArgs(
+        name=f"{classes_name}",
+        dim_tags=[serialization.DimInitArgs(name=f"{classes_name}_time", dim=None)],
+        sparse_dim=serialization.DimInitArgs(
+            name=f"{classes_name}_idx", dim=num_outputs, is_feature=True
+        ),
+        available_for_inference=True,
+    )
+
+    rc_recursion_limit = serialization.PythonEnlargeStackWorkaroundCode
+    rc_extern_data = serialization.ExternData(extern_data=[data_dim, classes_dim])
+    model_base = "i6_private.users.gunz.conformer"
+    rc_model = serialization.Import(f"{model_base}.Conformer")
+    rc_create_model = serialization.Import(f"{model_base}.network.create_network")
+    rc_network = serialization.Network(
+        rc_create_model.object_name,
+        {
+            "audio_data": "data",
+            "spatial_dim": "data_time",
+        },
+        {
+            "num_blocks": 12,
+            "model_dim": 512,
+            "out_dim": num_outputs,
+        },
+    )
+    rc_serializer = serialization.Collection(
+        make_local_package_copy=True,
+        packages={model_base},
+        serializer_objects=[
+            rc_recursion_limit,
+            rc_extern_data,
+            rc_model,
+            rc_create_model,
+            rc_network,
+        ],
+    )
+
+    cfg = returnn.ReturnnConfig(
+        config=config, post_config=post_config, python_epilog=[rc_serializer]
+    )
+    return cfg
+
+
 def get_nn_args(num_outputs: int, num_epochs: int = 500):
-    returnn_config = get_returnn_config(
+    returnn_config = get_returnn_common_args(
         num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs
     )
 
