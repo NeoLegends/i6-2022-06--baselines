@@ -211,6 +211,9 @@ def get_returnn_common_args(
     rc_serializer = serialization.Collection(
         make_local_package_copy=True,
         packages={model_base},
+        returnn_common_root=os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "recipe/returnn_common"
+        ),
         serializer_objects=[
             rc_recursion_limit,
             rc_extern_data,
@@ -221,7 +224,14 @@ def get_returnn_common_args(
     )
 
     cfg = returnn.ReturnnConfig(
-        config=config, post_config=post_config, python_epilog=[rc_serializer]
+        config=config,
+        post_config=post_config,
+        python_epilog=[rc_serializer],
+        python_prolog={
+            "numpy": "import numpy as np",
+            "returnn": "import numpy as np",
+            "returnn_common": "import numpy as np",
+        },
     )
     return cfg
 
@@ -409,10 +419,10 @@ def _run_hybrid(
 
     nn_args = get_nn_args(num_outputs=n_outputs)
 
-    embed()
-
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
+
+    # embed()
 
     lbs_hy_system.run(steps)
 
