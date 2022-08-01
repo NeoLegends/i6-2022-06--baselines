@@ -127,6 +127,7 @@ def get_returnn_common_args(
     num_inputs: int,
     num_outputs: int,
     num_epochs: int,
+    training: bool,
     batch_size: int = 12500,
 ) -> returnn.ReturnnConfig:
     config = {
@@ -150,7 +151,7 @@ def get_returnn_common_args(
         "newbob_multi_num_epochs": 40,
         "newbob_multi_update_interval": 1,
         ############
-        "network": {},
+        "network": {"output": {"class": "overwritten-by-returnn-common"}},
     }
     post_config = {
         "use_tensorflow": True,
@@ -204,6 +205,7 @@ def get_returnn_common_args(
             "num_blocks": 12,
             "model_dim": 512,
             "out_dim": num_outputs,
+            "training": training,
         },
     )
     rc_serializer = serialization.Collection(
@@ -225,10 +227,6 @@ def get_returnn_common_args(
 
 
 def get_nn_args(num_outputs: int, num_epochs: int = 500):
-    returnn_config = get_returnn_common_args(
-        num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs
-    )
-
     training_args = {
         "log_verbosity": 4,
         "num_epochs": num_epochs,
@@ -266,11 +264,18 @@ def get_nn_args(num_outputs: int, num_epochs: int = 500):
     }
     test_recognition_args = None
 
-    returnn_configs = {"conf": returnn_config}
+    returnn_training_config = get_returnn_common_args(
+        num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=True
+    )
+    returnn_fwd_config = get_returnn_common_args(
+        num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=False
+    )
+    returnn_configs = {"conf": returnn_training_config}
+    returnn_fwd_configs = {"conf": returnn_fwd_config}
 
     nn_args = rasr_util.HybridArgs(
         returnn_training_configs=returnn_configs,
-        returnn_recognition_configs=returnn_configs,
+        returnn_recognition_configs=returnn_fwd_configs,
         training_args=training_args,
         recognition_args=recognition_args,
         test_recognition_args=test_recognition_args,
