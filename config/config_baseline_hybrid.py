@@ -7,10 +7,7 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from i6_private.users.gunz.conformer import Conformer
 from sisyphus import gs, tk, Path
-
-from returnn_common import nn
 
 # -------------------- Recipes --------------------
 import i6_core.corpus as corpus_recipe
@@ -178,16 +175,6 @@ def get_returnn_common_args(
             "keep": returnn.CodeWrapper(f"list(np.arange(10, {num_epochs + 1}, 10))"),
         },
     }
-
-    data_time = nn.SpatialDim("data_time", None)
-    data_feature = nn.FeatureDim("data_feature", 50)
-    classes_time = nn.SpatialDim("classes_time", None)
-    classes_idx = nn.FeatureDim("classes_idx", 121)
-    data = nn.Data(
-        name="data",
-        dim_tags=[nn.batch_dim, data_time, data_feature],
-        available_for_inference=True,
-    )
 
     data_dim = serialization.DataInitArgs(
         name="data",
