@@ -442,7 +442,7 @@ def get_nn_args(
             num_epochs=num_epochs,
             conf_size=conf_size,
             training=True,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
         returnn_common_fwd_config = get_returnn_common_args(
             num_inputs=50,
@@ -450,7 +450,7 @@ def get_nn_args(
             num_epochs=num_epochs,
             conf_size=conf_size,
             training=False,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
         nn_args = get_hybrid_args(
             num_outputs=int(n_outputs.get()),
@@ -463,7 +463,7 @@ def get_nn_args(
             num_outputs=n_outputs,
             num_epochs=num_epochs,
             conf_size=conf_size,
-            batch_size=batch_size
+            batch_size=batch_size,
         )
         nn_args = get_hybrid_args(
             num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
