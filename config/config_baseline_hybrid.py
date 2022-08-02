@@ -157,8 +157,6 @@ def get_returnn_common_args(
         "newbob_learning_rate_decay": 0.9,
         "newbob_multi_num_epochs": 40,
         "newbob_multi_update_interval": 1,
-        ############
-        "network": {"output": {"class": "overwritten-by-returnn-common"}},
     }
     post_config = {
         "use_tensorflow": True,
@@ -303,8 +301,6 @@ def get_hybrid_system(
     gmm_system: GmmSystem,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
-
-    print(f"Hybrid {n_phones_to_str(n_phones)} {lm}")
 
     # ******************** Data Prep ********************
 
@@ -493,7 +489,7 @@ def run_hybrid(
             for conf_size in sizes:
                 for use_returnn_common in [True, False]:
                     rc = "rc" if use_returnn_common else "r"
-                    name = f"{n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
+                    name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
                     print(name)
                     with tk.block(name):
                         system = get_hybrid_system(
