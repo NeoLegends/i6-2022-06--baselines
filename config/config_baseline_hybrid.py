@@ -133,6 +133,7 @@ def get_returnn_common_args(
     num_inputs: int,
     num_outputs: int,
     num_epochs: int,
+    conf_size: int,
     training: bool,
     batch_size: int = 12500,
 ) -> returnn.ReturnnConfig:
@@ -207,7 +208,7 @@ def get_returnn_common_args(
         },
         {
             "num_blocks": 12,
-            "model_dim": 512,
+            "model_dim": conf_size,
             "out_dim": num_outputs,
             "training": training,
         },
@@ -295,15 +296,17 @@ def get_nn_args(
 
 
 def _run_hybrid(
+    *,
     lm: str,
     n_phones: int,
     conf_size: int,
+    returnn_common: bool,
     gmm_system: GmmSystem,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
     assert conf_size % 2 == 0
 
-    print(f"Hybrid {n_phones_to_str(n_phones)} {lm}")
+    print(f"Hybrid {n_phones_to_str(n_phones)} {lm} {conf_size} {returnn_common}")
 
     # ******************** Data Prep ********************
 
@@ -423,37 +426,37 @@ def _run_hybrid(
         n_outputs = cart_job.last_num_cart_labels
 
     num_epochs = 500
-    dict_cfg = get_returnn_config(
-        num_inputs=50,
-        num_outputs=n_outputs,
-        num_epochs=num_epochs,
-        conf_size=conf_size,
-    )
-    returnn_common_training_config = get_returnn_common_args(
-        num_inputs=50,
-        num_outputs=int(n_outputs.get()),
-        num_epochs=num_epochs,
-        training=True,
-    )
-    returnn_common_fwd_config = get_returnn_common_args(
-        num_inputs=50,
-        num_outputs=int(n_outputs.get()),
-        num_epochs=num_epochs,
-        training=False,
-    )
-
-    nn_args = get_nn_args(
-        num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
-    )
-    returnn_common_args = get_nn_args(
-        num_outputs=int(n_outputs.get()),
-        training_cfg=returnn_common_training_config,
-        fwd_cfg=returnn_common_fwd_config,
-    )
+    if returnn_common:
+        returnn_common_training_config = get_returnn_common_args(
+            num_inputs=50,
+            num_outputs=int(n_outputs.get()),
+            num_epochs=num_epochs,
+            training=True,
+        )
+        returnn_common_fwd_config = get_returnn_common_args(
+            num_inputs=50,
+            num_outputs=int(n_outputs.get()),
+            num_epochs=num_epochs,
+            training=False,
+        )
+        nn_args = get_nn_args(
+            num_outputs=int(n_outputs.get()),
+            training_cfg=returnn_common_training_config,
+            fwd_cfg=returnn_common_fwd_config,
+        )
+    else:
+        dict_cfg = get_returnn_config(
+            num_inputs=50,
+            num_outputs=n_outputs,
+            num_epochs=num_epochs,
+            conf_size=conf_size,
+        )
+        nn_args = get_nn_args(
+            num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
+        )
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
-    steps.add_step("nn", returnn_common_args)
 
     # embed()
 
@@ -480,7 +483,16 @@ def run_hybrid(
     for lm, gmm_sys in lm.items():
         for n_phone in N_PHONES:
             for conf_size in sizes:
-                with tk.block(f"{n_phones_to_str(n_phone)} {lm} {conf_size}"):
-                    results[n_phone, lm] = _run_hybrid(lm, n_phone, conf_size, gmm_sys)
+                for use_returnn_common in [True, False]:
+                    with tk.block(
+                        f"{n_phones_to_str(n_phone)} {lm} {conf_size} {use_returnn_common}"
+                    ):
+                        results[n_phone, lm] = _run_hybrid(
+                            lm=lm,
+                            n_phones=n_phone,
+                            conf_size=conf_size,
+                            gmm_system=gmm_sys,
+                            returnn_common=use_returnn_common
+                        )
 
     return results
