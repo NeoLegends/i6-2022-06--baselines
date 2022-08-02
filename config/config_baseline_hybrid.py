@@ -237,8 +237,6 @@ def get_returnn_common_args(
         ],
         python_prolog=[
             "import numpy as np",
-            "import sys",
-            'sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))'
         ],
     )
     return cfg
