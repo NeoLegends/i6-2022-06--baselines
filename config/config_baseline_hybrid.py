@@ -60,10 +60,10 @@ def get_returnn_config(
     num_heads = 8
     encoder_args = get_encoder_args(
         num_heads,
-        conf_size / num_heads,
-        conf_size / num_heads,
+        int(conf_size / num_heads),
+        int(conf_size / num_heads),
         conf_size,
-        conf_size * 4,
+        int(conf_size * 4),
         32,
     )
     network_args = get_network_args(
