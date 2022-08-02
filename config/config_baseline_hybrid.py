@@ -188,7 +188,9 @@ def get_returnn_common_args(
     )
     data_features = nn.get_extern_data(data)
 
-    net = Conformer(num_blocks=12, model_dim=conf_size, out_dim=num_outputs, training=training)
+    net = Conformer(
+        num_blocks=12, model_dim=conf_size, out_dim=num_outputs, training=training
+    )
     net(data_features, spatial_dim=data_time)
 
     config["network"] = nn.get_returnn_config().get_net_dict_raw_dict(net)
