@@ -241,7 +241,7 @@ def get_returnn_common_args(
     return cfg
 
 
-def get_nn_args(
+def get_hybrid_args(
     num_outputs: int,
     training_cfg: returnn.ReturnnConfig,
     fwd_cfg: returnn.ReturnnConfig,
@@ -295,22 +295,18 @@ def get_nn_args(
     return nn_args
 
 
-def _run_hybrid(
+def get_hybrid_system(
     *,
+    corpus_name: str,
     lm: str,
     n_phones: int,
-    conf_size: int,
-    returnn_common: bool,
     gmm_system: GmmSystem,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
-    assert conf_size % 2 == 0
 
-    print(f"Hybrid {n_phones_to_str(n_phones)} {lm} {conf_size} {returnn_common}")
+    print(f"Hybrid {n_phones_to_str(n_phones)} {lm}")
 
     # ******************** Data Prep ********************
-
-    corpus_name = "train-other-960"
 
     train_corpus_path = gmm_system.corpora[corpus_name].corpus_file
     total_train_num_segments = 281241
@@ -412,6 +408,17 @@ def _run_hybrid(
         train_cv_pairing=[tuple([f"{corpus_name}.train", f"{corpus_name}.cv"])],
     )
 
+    return lbs_hy_system
+
+
+def get_nn_args(
+    *,
+    gmm_system: GmmSystem,
+    corpus_name: str,
+    conf_size: int,
+    n_phones: int,
+    use_returnn_common: bool,
+) -> rasr_util.HybridArgs:
     if n_phones == 1:
         allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
             "allophones"
@@ -426,13 +433,16 @@ def _run_hybrid(
         n_outputs = cart_job.last_num_cart_labels
 
     num_epochs = 500
-    if returnn_common:
+    batch_size = 8192 if conf_size > 256 else 10000
+
+    if use_returnn_common:
         returnn_common_training_config = get_returnn_common_args(
             num_inputs=50,
             num_outputs=int(n_outputs.get()),
             num_epochs=num_epochs,
             conf_size=conf_size,
             training=True,
+            batch_size=batch_size
         )
         returnn_common_fwd_config = get_returnn_common_args(
             num_inputs=50,
@@ -440,8 +450,9 @@ def _run_hybrid(
             num_epochs=num_epochs,
             conf_size=conf_size,
             training=False,
+            batch_size=batch_size
         )
-        nn_args = get_nn_args(
+        nn_args = get_hybrid_args(
             num_outputs=int(n_outputs.get()),
             training_cfg=returnn_common_training_config,
             fwd_cfg=returnn_common_fwd_config,
@@ -452,19 +463,13 @@ def _run_hybrid(
             num_outputs=n_outputs,
             num_epochs=num_epochs,
             conf_size=conf_size,
+            batch_size=batch_size
         )
-        nn_args = get_nn_args(
+        nn_args = get_hybrid_args(
             num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
         )
 
-    steps = rasr_util.RasrSteps()
-    steps.add_step("nn", nn_args)
-
-    # embed()
-
-    lbs_hy_system.run(steps)
-
-    return lbs_hy_system
+    return nn_args
 
 
 def run_hybrid(
@@ -479,6 +484,7 @@ def run_hybrid(
 
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     sizes = [256, 512]
+    corpus_name = "train-other-960"
 
     results = {}
 
@@ -489,12 +495,23 @@ def run_hybrid(
                     with tk.block(
                         f"{n_phones_to_str(n_phone)} {lm} {conf_size} {use_returnn_common}"
                     ):
-                        results[n_phone, lm] = _run_hybrid(
+                        system = get_hybrid_system(
                             lm=lm,
                             n_phones=n_phone,
-                            conf_size=conf_size,
                             gmm_system=gmm_sys,
-                            returnn_common=use_returnn_common
+                            corpus_name=corpus_name,
                         )
+                        nn_args = get_nn_args(
+                            gmm_system=gmm_sys,
+                            corpus_name=corpus_name,
+                            conf_size=conf_size,
+                            n_phones=n_phone,
+                        )
+
+                        steps = rasr_util.RasrSteps()
+                        steps.add_step("nn", nn_args)
+                        system.run(steps)
+
+                        results[n_phone, lm] = system
 
     return results
