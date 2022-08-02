@@ -14,6 +14,7 @@ from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
 import i6_core.text as text
+import i6_core.tools as tools
 
 from i6_experiments.common.setups.returnn_common import serialization
 from i6_experiments.common.setups.rasr import GmmSystem, ReturnnRasrDataInput
@@ -135,6 +136,7 @@ def get_returnn_common_args(
     num_epochs: int,
     conf_size: int,
     training: bool,
+    returnn_common_root: tk.Path,
     batch_size: int = 12500,
 ) -> returnn.ReturnnConfig:
     config = {
@@ -212,13 +214,9 @@ def get_returnn_common_args(
         },
     )
     rc_serializer = serialization.Collection(
-        make_local_package_copy=False,
+        make_local_package_copy=True,
         packages={model_base},
-        returnn_common_root=tk.Path(
-            os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "recipe/returnn_common"
-            )
-        ),
+        returnn_common_root=returnn_common_root,
         serializer_objects=[
             rc_recursion_limit,
             rc_extern_data,
@@ -413,7 +411,7 @@ def get_nn_args(
     corpus_name: str,
     conf_size: int,
     n_phones: int,
-    use_returnn_common: bool,
+    returnn_common_root: typing.Optional[tk.Path] = None,
 ) -> rasr_util.HybridArgs:
     if n_phones == 1:
         allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
@@ -429,9 +427,9 @@ def get_nn_args(
         n_outputs = cart_job.last_num_cart_labels
 
     num_epochs = 500
-    batch_size = 8192 if conf_size > 256 else 10000
+    batch_size = 4096 if conf_size > 256 else 10000
 
-    if use_returnn_common:
+    if returnn_common_root:
         returnn_common_training_config = get_returnn_common_args(
             num_inputs=50,
             num_outputs=int(n_outputs.get()),
@@ -439,6 +437,7 @@ def get_nn_args(
             conf_size=conf_size,
             training=True,
             batch_size=batch_size,
+            returnn_common_root=returnn_common_root,
         )
         returnn_common_fwd_config = get_returnn_common_args(
             num_inputs=50,
@@ -447,6 +446,7 @@ def get_nn_args(
             conf_size=conf_size,
             training=False,
             batch_size=batch_size,
+            returnn_common_root=returnn_common_root,
         )
         nn_args = get_hybrid_args(
             num_outputs=int(n_outputs.get()),
@@ -476,7 +476,14 @@ def run_hybrid(
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
-    # ******************** GMM Init ********************
+    # ******************** get returnn_common ********************
+
+    clone_rc_job = tools.CloneGitRepositoryJob(
+        url="https://github.com/rwth-i6/returnn_common.git",
+        commit="79876b18552f61a3af7c21c670475fee51ef3991",
+    )
+
+    # ******************** HY Init ********************
 
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     sizes = [256, 512]
@@ -491,6 +498,7 @@ def run_hybrid(
                     rc = "rc" if use_returnn_common else "r"
                     name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
                     print(name)
+
                     with tk.block(name):
                         system = get_hybrid_system(
                             lm=lm,
@@ -503,7 +511,9 @@ def run_hybrid(
                             corpus_name=corpus_name,
                             conf_size=conf_size,
                             n_phones=n_phone,
-                            use_returnn_common=use_returnn_common
+                            returnn_common_root=clone_rc_job.out_repository
+                            if use_returnn_common
+                            else None,
                         )
 
                         steps = rasr_util.RasrSteps()
