@@ -492,9 +492,10 @@ def run_hybrid(
         for n_phone in N_PHONES:
             for conf_size in sizes:
                 for use_returnn_common in [True, False]:
-                    with tk.block(
-                        f"{n_phones_to_str(n_phone)} {lm} {conf_size} {use_returnn_common}"
-                    ):
+                    rc = "rc" if use_returnn_common else "r"
+                    name = f"{n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
+                    print(name)
+                    with tk.block(name):
                         system = get_hybrid_system(
                             lm=lm,
                             n_phones=n_phone,
@@ -506,6 +507,7 @@ def run_hybrid(
                             corpus_name=corpus_name,
                             conf_size=conf_size,
                             n_phones=n_phone,
+                            use_returnn_common=use_returnn_common
                         )
 
                         steps = rasr_util.RasrSteps()
