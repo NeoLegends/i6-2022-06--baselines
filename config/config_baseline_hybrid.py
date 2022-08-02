@@ -431,12 +431,14 @@ def _run_hybrid(
             num_inputs=50,
             num_outputs=int(n_outputs.get()),
             num_epochs=num_epochs,
+            conf_size=conf_size,
             training=True,
         )
         returnn_common_fwd_config = get_returnn_common_args(
             num_inputs=50,
             num_outputs=int(n_outputs.get()),
             num_epochs=num_epochs,
+            conf_size=conf_size,
             training=False,
         )
         nn_args = get_nn_args(
