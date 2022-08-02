@@ -193,7 +193,7 @@ def get_returnn_common_args(
         sparse_dim=serialization.DimInitArgs(
             name="classes_idx", dim=num_outputs, is_feature=True
         ),
-        available_for_inference=True,
+        available_for_inference=False,
     )
 
     rc_recursion_limit = serialization.PythonEnlargeStackWorkaroundCode
@@ -216,7 +216,7 @@ def get_returnn_common_args(
         },
     )
     rc_serializer = serialization.Collection(
-        make_local_package_copy=True,
+        make_local_package_copy=False,
         packages={model_base},
         returnn_common_root=returnn_common_root,
         serializer_objects=[
@@ -231,10 +231,15 @@ def get_returnn_common_args(
     cfg = returnn.ReturnnConfig(
         config=config,
         post_config=post_config,
-        python_epilog=[rc_serializer, "network = get_network(epoch=0)"],
-        python_prolog={
-            "numpy": "import numpy as np",
-        },
+        python_epilog=[
+            rc_serializer,
+            "network = get_network(epoch=0)" if not training else "",
+        ],
+        python_prolog=[
+            "import numpy as np",
+            "import sys",
+            'sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))'
+        ],
     )
     return cfg
 
