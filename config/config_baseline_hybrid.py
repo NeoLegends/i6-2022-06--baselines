@@ -231,10 +231,7 @@ def get_returnn_common_args(
     cfg = returnn.ReturnnConfig(
         config=config,
         post_config=post_config,
-        python_epilog=[
-            rc_serializer,
-            "network = get_network(epoch=0)"
-        ],
+        python_epilog=[rc_serializer, "network = get_network(epoch=0)"],
         python_prolog={
             "numpy": "import numpy as np",
         },
@@ -488,10 +485,12 @@ def run_hybrid(
     clone_r_job = tools.CloneGitRepositoryJob(
         url="https://github.com/rwth-i6/returnn.git",
         commit="aadac2637ed6ec00925b9debf0dbd3c0ee20d6a6",
+        checkout_folder_name="returnn",
     )
     clone_rc_job = tools.CloneGitRepositoryJob(
         url="https://github.com/rwth-i6/returnn_common.git",
         commit="79876b18552f61a3af7c21c670475fee51ef3991",
+        checkout_folder_name="returnn_common",
     )
 
     # ******************** HY Init ********************
