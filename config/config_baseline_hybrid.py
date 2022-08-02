@@ -5,7 +5,6 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from returnn_common import nn
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -36,8 +35,6 @@ from i6_private.users.gunz.system_librispeech.specaugment_new import (
 from i6_private.users.gunz.system_librispeech.transformer_network import (
     attention_for_hybrid,
 )
-
-from i6_private.users.gunz.conformer import Conformer
 
 from .config import N_PHONES, RAISSI_ALIGNMENT
 
@@ -238,15 +235,16 @@ def get_returnn_common_args(
         python_epilog=[rc_serializer],
         python_prolog={
             "numpy": "import numpy as np",
-            "returnn": "import numpy as np",
-            "returnn_common": "import numpy as np",
         },
     )
     return cfg
 
 
 def get_nn_args(
-    num_outputs: int, conf_size: int, returnn_common: bool, num_epochs: int = 500
+    num_outputs: int,
+    training_cfg: returnn.ReturnnConfig,
+    fwd_cfg: returnn.ReturnnConfig,
+    num_epochs: int = 500,
 ):
     training_args = {
         "log_verbosity": 4,
@@ -285,32 +283,9 @@ def get_nn_args(
     }
     test_recognition_args = None
 
-    if returnn_common:
-        returnn_training_config = get_returnn_common_args(
-            num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=True
-        )
-        returnn_fwd_config = get_returnn_common_args(
-            num_inputs=50,
-            num_outputs=num_outputs,
-            num_epochs=num_epochs,
-            training=False,
-        )
-        returnn_configs = {"conf": returnn_training_config}
-        returnn_fwd_configs = {"conf": returnn_fwd_config}
-    else:
-        returnn_configs = {
-            "conf": get_returnn_config(
-                num_inputs=50,
-                num_outputs=num_outputs,
-                num_epochs=num_epochs,
-                conf_size=conf_size,
-            )
-        }
-        returnn_fwd_configs = returnn_configs
-
     nn_args = rasr_util.HybridArgs(
-        returnn_training_configs=returnn_configs,
-        returnn_recognition_configs=returnn_fwd_configs,
+        returnn_training_configs={"conf": training_cfg},
+        returnn_recognition_configs={"conf": fwd_cfg},
         training_args=training_args,
         recognition_args=recognition_args,
         test_recognition_args=test_recognition_args,
@@ -447,11 +422,33 @@ def _run_hybrid(
         ]
         n_outputs = cart_job.last_num_cart_labels
 
+    num_epochs = 500
+    dict_cfg = get_returnn_config(
+        num_inputs=50,
+        num_outputs=n_outputs,
+        num_epochs=num_epochs,
+        conf_size=conf_size,
+    )
+    returnn_common_training_config = get_returnn_common_args(
+        num_inputs=50,
+        num_outputs=int(n_outputs.get()),
+        num_epochs=num_epochs,
+        training=True,
+    )
+    returnn_common_fwd_config = get_returnn_common_args(
+        num_inputs=50,
+        num_outputs=int(n_outputs.get()),
+        num_epochs=num_epochs,
+        training=False,
+    )
+
     nn_args = get_nn_args(
-        num_outputs=n_outputs.get(), conf_size=conf_size, returnn_common=False
+        num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
     )
     returnn_common_args = get_nn_args(
-        num_outputs=n_outputs.get(), conf_size=conf_size, returnn_common=True
+        num_outputs=int(n_outputs.get()),
+        training_cfg=returnn_common_training_config,
+        fwd_cfg=returnn_common_fwd_config,
     )
 
     steps = rasr_util.RasrSteps()
