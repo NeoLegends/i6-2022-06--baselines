@@ -245,7 +245,9 @@ def get_returnn_common_args(
     return cfg
 
 
-def get_nn_args(num_outputs: int, conf_size: int, num_epochs: int = 500):
+def get_nn_args(
+    num_outputs: int, conf_size: int, returnn_common: bool, num_epochs: int = 500
+):
     training_args = {
         "log_verbosity": 4,
         "num_epochs": num_epochs,
@@ -283,27 +285,32 @@ def get_nn_args(num_outputs: int, conf_size: int, num_epochs: int = 500):
     }
     test_recognition_args = None
 
-    # returnn_training_config = get_returnn_common_args(
-    #    num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=True
-    # )
-    # returnn_fwd_config = get_returnn_common_args(
-    #    num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=False
-    # )
-    # returnn_configs = {"conf": returnn_training_config}
-    # returnn_fwd_configs = {"conf": returnn_fwd_config}
-
-    returnn_configs = {
-        "conf": get_returnn_config(
+    if returnn_common:
+        returnn_training_config = get_returnn_common_args(
+            num_inputs=50, num_outputs=num_outputs, num_epochs=num_epochs, training=True
+        )
+        returnn_fwd_config = get_returnn_common_args(
             num_inputs=50,
             num_outputs=num_outputs,
             num_epochs=num_epochs,
-            conf_size=conf_size,
+            training=False,
         )
-    }
+        returnn_configs = {"conf": returnn_training_config}
+        returnn_fwd_configs = {"conf": returnn_fwd_config}
+    else:
+        returnn_configs = {
+            "conf": get_returnn_config(
+                num_inputs=50,
+                num_outputs=num_outputs,
+                num_epochs=num_epochs,
+                conf_size=conf_size,
+            )
+        }
+        returnn_fwd_configs = returnn_configs
 
     nn_args = rasr_util.HybridArgs(
         returnn_training_configs=returnn_configs,
-        returnn_recognition_configs=returnn_configs,
+        returnn_recognition_configs=returnn_fwd_configs,
         training_args=training_args,
         recognition_args=recognition_args,
         test_recognition_args=test_recognition_args,
@@ -440,10 +447,16 @@ def _run_hybrid(
         ]
         n_outputs = cart_job.last_num_cart_labels
 
-    nn_args = get_nn_args(num_outputs=n_outputs.get(), conf_size=conf_size)
+    nn_args = get_nn_args(
+        num_outputs=n_outputs.get(), conf_size=conf_size, returnn_common=False
+    )
+    returnn_common_args = get_nn_args(
+        num_outputs=n_outputs.get(), conf_size=conf_size, returnn_common=True
+    )
 
     steps = rasr_util.RasrSteps()
     steps.add_step("nn", nn_args)
+    steps.add_step("nn", returnn_common_args)
 
     # embed()
 
