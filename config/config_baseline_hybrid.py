@@ -1,4 +1,6 @@
 import copy
+import itertools
+
 from IPython import embed
 import numpy as np
 import os
@@ -186,15 +188,6 @@ def get_returnn_common_args(
         dim_tags=[nn.batch_dim, data_time, data_feature],
         available_for_inference=True,
     )
-    data_features = nn.get_extern_data(data)
-
-    net = Conformer(
-        num_blocks=12, model_dim=conf_size, out_dim=num_outputs, training=training
-    )
-    net(data_features, spatial_dim=data_time)
-
-    config["network"] = nn.get_returnn_config().get_net_dict_raw_dict(net)
-    embed()
 
     data_dim = serialization.DataInitArgs(
         name="data",
@@ -251,7 +244,10 @@ def get_returnn_common_args(
     cfg = returnn.ReturnnConfig(
         config=config,
         post_config=post_config,
-        python_epilog=[rc_serializer],
+        python_epilog=[
+            rc_serializer,
+            "network = get_network(epoch=0)"
+        ],
         python_prolog={
             "numpy": "import numpy as np",
         },
@@ -316,9 +312,9 @@ def get_hybrid_args(
 def get_hybrid_system(
     *,
     corpus_name: str,
-    lm: str,
     n_phones: int,
     gmm_system: GmmSystem,
+    returnn_root: tk.Path,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
 
@@ -413,7 +409,9 @@ def get_hybrid_system(
     )
 
     rasr_path = os.path.join(gs.RASR_ROOT, "arch", gs.RASR_ARCH)
-    lbs_hy_system = HybridSystem(rasr_binary_path=tk.Path(rasr_path))
+    lbs_hy_system = HybridSystem(
+        rasr_binary_path=tk.Path(rasr_path), returnn_root=returnn_root
+    )
     lbs_hy_system.init_system(
         rasr_init_args=hybrid_init_args,
         train_data=nn_train_data_inputs,
@@ -500,6 +498,10 @@ def run_hybrid(
 
     # ******************** get returnn_common ********************
 
+    clone_r_job = tools.CloneGitRepositoryJob(
+        url="https://github.com/rwth-i6/returnn.git",
+        commit="aadac2637ed6ec00925b9debf0dbd3c0ee20d6a6",
+    )
     clone_rc_job = tools.CloneGitRepositoryJob(
         url="https://github.com/rwth-i6/returnn_common.git",
         commit="79876b18552f61a3af7c21c670475fee51ef3991",
@@ -509,39 +511,39 @@ def run_hybrid(
 
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     sizes = [256, 512]
+    use_returnn_common_cfg = [True]
     corpus_name = "train-other-960"
 
     results = {}
 
-    for lm, gmm_sys in lm.items():
-        for n_phone in N_PHONES:
-            for conf_size in sizes:
-                for use_returnn_common in [True, False]:
-                    rc = "rc" if use_returnn_common else "r"
-                    name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
-                    print(name)
+    for (lm, gmm_sys), n_phone, conf_size, use_returnn_common in itertools.product(
+        lm.items(), N_PHONES, sizes, use_returnn_common_cfg
+    ):
+        rc = "rc" if use_returnn_common else "r"
+        name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
+        print(name)
 
-                    with tk.block(name):
-                        system = get_hybrid_system(
-                            lm=lm,
-                            n_phones=n_phone,
-                            gmm_system=gmm_sys,
-                            corpus_name=corpus_name,
-                        )
-                        nn_args = get_nn_args(
-                            gmm_system=gmm_sys,
-                            corpus_name=corpus_name,
-                            conf_size=conf_size,
-                            n_phones=n_phone,
-                            returnn_common_root=clone_rc_job.out_repository
-                            if use_returnn_common
-                            else None,
-                        )
+        with tk.block(name):
+            system = get_hybrid_system(
+                n_phones=n_phone,
+                gmm_system=gmm_sys,
+                corpus_name=corpus_name,
+                returnn_root=clone_r_job.out_repository,
+            )
+            nn_args = get_nn_args(
+                gmm_system=gmm_sys,
+                corpus_name=corpus_name,
+                conf_size=conf_size,
+                n_phones=n_phone,
+                returnn_common_root=clone_rc_job.out_repository
+                if use_returnn_common
+                else None,
+            )
 
-                        steps = rasr_util.RasrSteps()
-                        steps.add_step("nn", nn_args)
-                        system.run(steps)
+            steps = rasr_util.RasrSteps()
+            steps.add_step("nn", nn_args)
+            system.run(steps)
 
-                        results[n_phone, lm] = system
+            results[n_phone, lm] = system
 
     return results
