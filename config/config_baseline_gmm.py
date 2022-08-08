@@ -10,9 +10,9 @@ import i6_core.rasr as rasr
 
 import i6_experiments.common.setups.rasr.gmm_system as gmm_system
 import i6_experiments.common.setups.rasr.util as rasr_util
-import i6_experiments.users.raissi.experiments.librispeech.data_preparation.other_960h.pipeline_gmm_args as gmm_setups
 
-import i6_private.users.gunz.rasr.ls_base_args as data_setups
+import i6_private.users.gunz.setups.ls.pipeline_gmm_args as gmm_setups
+import i6_private.users.gunz.setups.ls.pipeline_rasr_args as data_setups
 
 from .lbs import get_data_lstm_lm, get_data_4gram_lm
 
@@ -40,14 +40,17 @@ def _run_gmm(
     )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
-    cart_args = gmm_setups.get_cart_args()
+    cart_di_args = gmm_setups.get_cart_args()
+    cart_di_args.cart_lda_args["name"] = "di"
+    cart_tri_args = gmm_setups.get_cart_args()
     tri_args = gmm_setups.get_triphone_args()
     final_output_args = data_setups.get_final_output()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("cart", cart_args)
+    steps.add_step("cart", cart_di_args)
+    steps.add_step("cart", cart_tri_args)
     steps.add_step("tri", tri_args)
     steps.add_step("output", final_output_args)
 

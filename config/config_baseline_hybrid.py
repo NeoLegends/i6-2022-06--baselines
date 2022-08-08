@@ -7,6 +7,7 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
+from i6_core.cart import EstimateCartJob
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -18,7 +19,6 @@ import i6_core.rasr as rasr
 import i6_core.text as text
 import i6_core.tools as tools
 
-from i6_experiments.common.setups.returnn_common import serialization
 from i6_experiments.common.setups.rasr import GmmSystem, ReturnnRasrDataInput
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
@@ -29,7 +29,7 @@ from i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
 )
-from i6_private.users.gunz.system_librispeech.specaugment_new import (
+from i6_private.users.gunz.system_librispeech.specaugment import (
     mask as sa_mask,
     random_mask as sa_random_mask,
     summary as sa_summary,
@@ -62,12 +62,12 @@ def get_returnn_config(
 ) -> returnn.ReturnnConfig:
     num_heads = 8
     encoder_args = get_encoder_args(
-        num_heads,
-        int(conf_size / num_heads),
-        int(conf_size / num_heads),
-        conf_size,
-        int(conf_size * 4),
-        32,
+        num_heads=num_heads,
+        key_dim_per_head=int(conf_size / num_heads),
+        value_dim_per_head=(conf_size / num_heads),
+        model_dim=conf_size,
+        ff_dim=int(conf_size * 4),
+        kernel_size=32,
     )
     network_args = get_network_args(
         type="conformer",
@@ -130,116 +130,6 @@ def get_returnn_config(
     )
 
     return returnn_cfg
-
-
-def get_returnn_common_args(
-    num_inputs: int,
-    num_outputs: int,
-    num_epochs: int,
-    conf_size: int,
-    training: bool,
-    returnn_common_root: tk.Path,
-    batch_size: int = 12500,
-) -> returnn.ReturnnConfig:
-    config = {
-        "behavior_version": 12,
-        ############
-        "optimizer": {"class": "adam", "epsilon": 1e-8},
-        "update_on_device": True,
-        "batch_size": batch_size,
-        "chunking": "100:50",
-        "optimizer_epsilon": 1e-8,
-        "gradient_noise": 0.1,
-        "window": 1,
-        ############
-        "learning_rates": returnn.CodeWrapper("list(np.linspace(3e-4, 8e-4, 10))"),
-        "learning_rate_control": "newbob_multi_epoch",
-        "learning_rate_control_min_num_epochs_per_new_lr": 3,
-        "learning_rate_control_relative_error_relative_lr": True,
-        "min_learning_rate": 1e-5,
-        ############
-        "newbob_learning_rate_decay": 0.9,
-        "newbob_multi_num_epochs": 40,
-        "newbob_multi_update_interval": 1,
-    }
-    post_config = {
-        "use_tensorflow": True,
-        "tf_log_memory_usage": True,
-        "stop_on_nonfinite_train_score": True,
-        "log_batch_size": True,
-        "debug_print_layer_output_template": True,
-        "cache_size": "0",
-        "cleanup_old_models": {
-            "keep_last_n": 5,
-            "keep_best_n": 5,
-            "keep": returnn.CodeWrapper(f"list(np.arange(10, {num_epochs + 1}, 10))"),
-        },
-    }
-
-    data_dim = serialization.DataInitArgs(
-        name="data",
-        dim_tags=[
-            serialization.DimInitArgs(name="data_time", dim=None),
-            serialization.DimInitArgs(
-                name="data_feature", dim=num_inputs, is_feature=True
-            ),
-        ],
-        sparse_dim=None,
-        available_for_inference=True,
-    )
-    classes_dim = serialization.DataInitArgs(
-        name="classes",
-        dim_tags=[serialization.DimInitArgs(name="classes_time", dim=None)],
-        sparse_dim=serialization.DimInitArgs(
-            name="classes_idx", dim=num_outputs, is_feature=True
-        ),
-        available_for_inference=False,
-    )
-
-    rc_recursion_limit = serialization.PythonEnlargeStackWorkaroundCode
-    rc_extern_data = serialization.ExternData(extern_data=[data_dim, classes_dim])
-    model_base = "i6_private.users.gunz.conformer"
-    rc_model = serialization.Import(f"{model_base}.Conformer")
-    rc_create_model = serialization.Import(f"{model_base}.network.create_network")
-    rc_network = serialization.Network(
-        rc_create_model.object_name,
-        {
-            "spatial_dim": "data_time",
-            "features_data": "data",
-            "target_data": "classes",
-        },
-        {
-            "num_blocks": 12,
-            "model_dim": conf_size,
-            "out_dim": num_outputs,
-            "training": training,
-        },
-    )
-    rc_serializer = serialization.Collection(
-        make_local_package_copy=False,
-        packages={model_base},
-        returnn_common_root=returnn_common_root,
-        serializer_objects=[
-            rc_recursion_limit,
-            rc_extern_data,
-            rc_model,
-            rc_create_model,
-            rc_network,
-        ],
-    )
-
-    cfg = returnn.ReturnnConfig(
-        config=config,
-        post_config=post_config,
-        python_epilog=[
-            rc_serializer,
-            "network = get_network(epoch=0)" if not training else "",
-        ],
-        python_prolog=[
-            "import numpy as np",
-        ],
-    )
-    return cfg
 
 
 def get_hybrid_args(
@@ -349,7 +239,8 @@ def get_hybrid_system(
             nn_devtrain_data.crp.acoustic_model_config.state_tying.type
         ) = nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
-        raise NotImplementedError("diphones not supported yet")
+        # use Raissi triphone alignment (for now)
+        align = tk.Path(RAISSI_ALIGNMENT)
     else:
         # use Raissi triphone alignment (for now)
         align = tk.Path(RAISSI_ALIGNMENT)
@@ -418,7 +309,6 @@ def get_nn_args(
     corpus_name: str,
     conf_size: int,
     n_phones: int,
-    returnn_common_root: typing.Optional[tk.Path] = None,
 ) -> rasr_util.HybridArgs:
     if n_phones == 1:
         allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
@@ -426,7 +316,10 @@ def get_nn_args(
         ]
         n_outputs = allophones_job.out_num_monophone_states
     elif n_phones == 2:
-        raise NotImplementedError("diphones not supported yet")
+        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
+            f"cart_and_lda_{corpus_name}_di"
+        ]
+        n_outputs = cart_job.last_num_cart_labels
     else:
         cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
             f"cart_and_lda_{corpus_name}_mono"
@@ -436,41 +329,16 @@ def get_nn_args(
     num_epochs = 500
     batch_size = 4096 if conf_size > 256 else 10000
 
-    if returnn_common_root:
-        returnn_common_training_config = get_returnn_common_args(
-            num_inputs=50,
-            num_outputs=int(n_outputs.get()),
-            num_epochs=num_epochs,
-            conf_size=conf_size,
-            training=True,
-            batch_size=batch_size,
-            returnn_common_root=returnn_common_root,
-        )
-        returnn_common_fwd_config = get_returnn_common_args(
-            num_inputs=50,
-            num_outputs=int(n_outputs.get()),
-            num_epochs=num_epochs,
-            conf_size=conf_size,
-            training=False,
-            batch_size=batch_size,
-            returnn_common_root=returnn_common_root,
-        )
-        nn_args = get_hybrid_args(
-            num_outputs=int(n_outputs.get()),
-            training_cfg=returnn_common_training_config,
-            fwd_cfg=returnn_common_fwd_config,
-        )
-    else:
-        dict_cfg = get_returnn_config(
-            num_inputs=50,
-            num_outputs=n_outputs,
-            num_epochs=num_epochs,
-            conf_size=conf_size,
-            batch_size=batch_size,
-        )
-        nn_args = get_hybrid_args(
-            num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
-        )
+    dict_cfg = get_returnn_config(
+        num_inputs=50,
+        num_outputs=n_outputs,
+        num_epochs=num_epochs,
+        conf_size=conf_size,
+        batch_size=batch_size,
+    )
+    nn_args = get_hybrid_args(
+        num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
+    )
 
     return nn_args
 
@@ -483,33 +351,26 @@ def run_hybrid(
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
-    # ******************** get returnn_common ********************
+    # ******************** git setup ********************
 
     clone_r_job = tools.CloneGitRepositoryJob(
         url="https://github.com/rwth-i6/returnn.git",
         commit="aadac2637ed6ec00925b9debf0dbd3c0ee20d6a6",
         checkout_folder_name="returnn",
     )
-    clone_rc_job = tools.CloneGitRepositoryJob(
-        url="https://github.com/rwth-i6/returnn_common.git",
-        commit="79876b18552f61a3af7c21c670475fee51ef3991",
-        checkout_folder_name="returnn_common",
-    )
 
     # ******************** HY Init ********************
 
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     sizes = [256, 512]
-    use_returnn_common_cfg = [True]
     corpus_name = "train-other-960"
 
     results = {}
 
-    for (lm, gmm_sys), n_phone, conf_size, use_returnn_common in itertools.product(
-        lm.items(), N_PHONES, sizes, use_returnn_common_cfg
+    for (lm, gmm_sys), n_phone, conf_size in itertools.product(
+        lm.items(), N_PHONES, sizes
     ):
-        rc = "rc" if use_returnn_common else "r"
-        name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size} {rc}"
+        name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size}"
         print(name)
 
         with tk.block(name):
@@ -524,9 +385,6 @@ def run_hybrid(
                 corpus_name=corpus_name,
                 conf_size=conf_size,
                 n_phones=n_phone,
-                returnn_common_root=clone_rc_job.out_repository
-                if use_returnn_common
-                else None,
             )
 
             steps = rasr_util.RasrSteps()
