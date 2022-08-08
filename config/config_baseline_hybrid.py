@@ -337,7 +337,7 @@ def get_nn_args(
         batch_size=batch_size,
     )
     nn_args = get_hybrid_args(
-        num_outputs=int(n_outputs.get()), training_cfg=dict_cfg, fwd_cfg=dict_cfg
+        num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
     )
 
     return nn_args
