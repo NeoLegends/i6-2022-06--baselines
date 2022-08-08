@@ -44,7 +44,7 @@ def _run_gmm(
     cart_di_args.cart_lda_args["name"] = "di"
     cart_tri_args = gmm_setups.get_cart_args()
     tri_args = gmm_setups.get_triphone_args()
-    final_output_args = data_setups.get_final_output()
+    final_output_args = gmm_setups.get_final_output()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
