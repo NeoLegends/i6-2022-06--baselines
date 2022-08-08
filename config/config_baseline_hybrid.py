@@ -24,7 +24,7 @@ from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 
-import i6_private.users.gunz.rasr.ls_base_args as lbs_data_setups
+import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
 from i6_private.users.gunz.system_librispeech.get_network_args import (
     get_encoder_args,
     get_network_args,
