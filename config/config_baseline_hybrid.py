@@ -281,11 +281,7 @@ def get_hybrid_system(
 
     # ******************** System Init ********************
 
-    hybrid_init_args = lbs_data_setups.get_init_args(
-        am_extra_args={
-            "states_per_phone": n_phones,
-        }
-    )
+    hybrid_init_args = lbs_data_setups.get_init_args()
 
     rasr_path = os.path.join(gs.RASR_ROOT, "arch", gs.RASR_ARCH)
     lbs_hy_system = HybridSystem(
