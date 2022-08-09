@@ -133,6 +133,7 @@ def get_returnn_config(
 
 
 def get_hybrid_args(
+    name: str,
     num_outputs: int,
     training_cfg: returnn.ReturnnConfig,
     fwd_cfg: returnn.ReturnnConfig,
@@ -176,8 +177,8 @@ def get_hybrid_args(
     test_recognition_args = None
 
     nn_args = rasr_util.HybridArgs(
-        returnn_training_configs={"conf": training_cfg},
-        returnn_recognition_configs={"conf": fwd_cfg},
+        returnn_training_configs={name: training_cfg},
+        returnn_recognition_configs={name: fwd_cfg},
         training_args=training_args,
         recognition_args=recognition_args,
         test_recognition_args=test_recognition_args,
@@ -329,6 +330,7 @@ def get_nn_args(
     num_epochs = 500
     batch_size = 4096 if conf_size > 256 else 10000
 
+    name = f"conf-ph:{n_phones}-dim:{conf_size}-lr:v1"
     dict_cfg = get_returnn_config(
         num_inputs=50,
         num_outputs=n_outputs,
@@ -337,7 +339,7 @@ def get_nn_args(
         batch_size=batch_size,
     )
     nn_args = get_hybrid_args(
-        num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
+        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
     )
 
     return nn_args
