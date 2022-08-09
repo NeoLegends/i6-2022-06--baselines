@@ -249,7 +249,7 @@ def get_nn_args(
         n_outputs = cart_job.last_num_cart_labels
 
     num_epochs = 500
-    batch_size = 4096 if conf_size > 256 else 10000
+    batch_size = {256: 10000, 512: 6144, 768: 5000}
 
     dict_cfg = get_returnn_config(
         num_inputs=50,
@@ -257,7 +257,7 @@ def get_nn_args(
         num_epochs=num_epochs,
         conf_size=conf_size,
         conf_num_heads=conf_num_heads,
-        batch_size=batch_size,
+        batch_size=batch_size.get(conf_size, 4096),
         lr=lr,
     )
     nn_args = get_hybrid_args(
@@ -409,7 +409,7 @@ def run_hybrid(
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     lr = ["v1", "v2"]
     num_heads = [8, 12]
-    sizes = [256, 512, 768]
+    sizes = [512, 768]
 
     results = {}
 
