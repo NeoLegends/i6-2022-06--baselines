@@ -53,13 +53,55 @@ def n_phones_to_str(n_phones: int) -> str:
         raise ValueError(f"n_phones must be either 1, 2 or 3, not {n_phones}")
 
 
+def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
+    assert lr_schedule in ["v1", "v2"]
+
+    base = {
+        "learning_rate_file": "lr.log",
+        "min_learning_rate": 1e-6,
+    }
+
+    if lr_schedule == "v1":
+        # Taken from Chris Lüscher
+
+        return {
+            **base,
+            "learning_rates": list(np.linspace(3e-4, 8e-4, 10)),
+            "learning_rate_control": "newbob_multi_epoch",
+            "learning_rate_control_min_num_epochs_per_new_lr": 3,
+            "learning_rate_control_relative_error_relative_lr": True,
+            "newbob_learning_rate_decay": 0.9,
+            "newbob_multi_num_epochs": 40,
+            "newbob_multi_update_interval": 1,
+        }
+    elif lr_schedule == "v2":
+        # OneCycle: https://www-i6.informatik.rwth-aachen.de/publications/download/1204/Zhou--2022.pdf
+
+        lr_peak = 1e-4
+        rates = (
+            np.linspace(lr_peak / 10, lr_peak, int(num_epochs * 0.45))
+            + np.linspace(lr_peak, lr_peak / 10, int(num_epochs * 0.45))
+            + [1e-6]
+        )
+        return {
+            **base,
+            "learning_rates": rates,
+            "learning_rate_control": "constant",
+        }
+    else:
+        raise ValueError(f"unknown LR {lr_schedule}")
+
+
 def get_returnn_config(
     num_inputs: int,
     num_outputs: int,
     num_epochs: int,
     conf_size: int,
     batch_size: int = 10000,
+    lr: str = "v1",
 ) -> returnn.ReturnnConfig:
+    assert lr in ["v1", "v2"]
+
     num_heads = 8
     encoder_args = get_encoder_args(
         num_heads=num_heads,
@@ -94,14 +136,7 @@ def get_returnn_config(
         "optimizer": {"class": "nadam"},
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
-        "learning_rates": returnn.CodeWrapper("list(np.linspace(3e-4, 8e-4, 10))"),
-        "learning_rate_control": "newbob_multi_epoch",
-        "learning_rate_control_min_num_epochs_per_new_lr": 3,
-        "learning_rate_control_relative_error_relative_lr": True,
-        "min_learning_rate": 1e-5,
-        "newbob_learning_rate_decay": 0.9,
-        "newbob_multi_num_epochs": 40,
-        "newbob_multi_update_interval": 1,
+        **get_lr_config(num_epochs=num_epochs, lr_schedule=lr),
         "network": network,
     }
 
@@ -182,6 +217,49 @@ def get_hybrid_args(
         training_args=training_args,
         recognition_args=recognition_args,
         test_recognition_args=test_recognition_args,
+    )
+
+    return nn_args
+
+
+def get_nn_args(
+    *,
+    gmm_system: GmmSystem,
+    corpus_name: str,
+    conf_size: int,
+    n_phones: int,
+    lr: str,
+) -> rasr_util.HybridArgs:
+    if n_phones == 1:
+        allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
+            "allophones"
+        ]
+        n_outputs = allophones_job.out_num_monophone_states
+    elif n_phones == 2:
+        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
+            f"cart_and_lda_{corpus_name}_di"
+        ]
+        n_outputs = cart_job.last_num_cart_labels
+    else:
+        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
+            f"cart_and_lda_{corpus_name}_mono"
+        ]
+        n_outputs = cart_job.last_num_cart_labels
+
+    num_epochs = 500
+    batch_size = 4096 if conf_size > 256 else 10000
+
+    name = f"conf-ph:{n_phones}-dim:{conf_size}-lr:{lr}"
+    dict_cfg = get_returnn_config(
+        num_inputs=50,
+        num_outputs=n_outputs,
+        num_epochs=num_epochs,
+        conf_size=conf_size,
+        batch_size=batch_size,
+        lr=lr,
+    )
+    nn_args = get_hybrid_args(
+        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
     )
 
     return nn_args
@@ -300,47 +378,6 @@ def get_hybrid_system(
     return lbs_hy_system
 
 
-def get_nn_args(
-    *,
-    gmm_system: GmmSystem,
-    corpus_name: str,
-    conf_size: int,
-    n_phones: int,
-) -> rasr_util.HybridArgs:
-    if n_phones == 1:
-        allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
-            "allophones"
-        ]
-        n_outputs = allophones_job.out_num_monophone_states
-    elif n_phones == 2:
-        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
-            f"cart_and_lda_{corpus_name}_di"
-        ]
-        n_outputs = cart_job.last_num_cart_labels
-    else:
-        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
-            f"cart_and_lda_{corpus_name}_mono"
-        ]
-        n_outputs = cart_job.last_num_cart_labels
-
-    num_epochs = 500
-    batch_size = 4096 if conf_size > 256 else 10000
-
-    name = f"conf-ph:{n_phones}-dim:{conf_size}-lr:v1"
-    dict_cfg = get_returnn_config(
-        num_inputs=50,
-        num_outputs=n_outputs,
-        num_epochs=num_epochs,
-        conf_size=conf_size,
-        batch_size=batch_size,
-    )
-    nn_args = get_hybrid_args(
-        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
-    )
-
-    return nn_args
-
-
 def run_hybrid(
     gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
 ) -> typing.Dict[typing.Tuple[int, str], HybridSystem]:
@@ -359,16 +396,17 @@ def run_hybrid(
 
     # ******************** HY Init ********************
 
-    lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
-    sizes = [256, 512]
     corpus_name = "train-other-960"
+    lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
+    lr = ["v1", "v2"]
+    sizes = [256, 512]
 
     results = {}
 
-    for (lm, gmm_sys), n_phone, conf_size in itertools.product(
-        lm.items(), N_PHONES, sizes
+    for (lm, gmm_sys), n_phone, conf_size, lr in itertools.product(
+        lm.items(), N_PHONES, sizes, lr
     ):
-        name = f"hy {n_phones_to_str(n_phone)} {lm} {conf_size}"
+        name = f"hy ph:{n_phones_to_str(n_phone)} dim:{conf_size} lr:{lr}"
         print(name)
 
         with tk.block(name):
@@ -383,6 +421,7 @@ def run_hybrid(
                 corpus_name=corpus_name,
                 conf_size=conf_size,
                 n_phones=n_phone,
+                lr=lr,
             )
 
             steps = rasr_util.RasrSteps()
