@@ -48,8 +48,8 @@ def _run_gmm(
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("cart", cart_di_args)
-    steps.add_step("cart", cart_tri_args)
+    steps.add_step("cart_di", cart_di_args)
+    steps.add_step("cart_tri", cart_tri_args)
     steps.add_step("tri", tri_args)
     steps.add_step("output", final_output_args)
 
