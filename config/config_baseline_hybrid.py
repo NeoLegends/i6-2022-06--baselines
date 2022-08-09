@@ -318,6 +318,13 @@ def get_hybrid_system(
             nn_devtrain_data.crp.acoustic_model_config.state_tying.type
         ) = nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
+        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
+            f"cart_and_lda_{corpus_name}_di"
+        ]
+        nn_train_data.crp.acoustic_model_config.state_tying.file = (
+            cart_job.last_cart_tree
+        )
+
         # use Raissi triphone alignment (for now)
         align = tk.Path(RAISSI_ALIGNMENT)
     else:
