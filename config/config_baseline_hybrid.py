@@ -64,7 +64,7 @@ def get_returnn_config(
     encoder_args = get_encoder_args(
         num_heads=num_heads,
         key_dim_per_head=int(conf_size / num_heads),
-        value_dim_per_head=(conf_size / num_heads),
+        value_dim_per_head=int(conf_size / num_heads),
         model_dim=conf_size,
         ff_dim=int(conf_size * 4),
         kernel_size=32,
