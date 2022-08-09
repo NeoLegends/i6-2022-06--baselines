@@ -317,8 +317,6 @@ def get_nn_args(
         ]
         n_outputs = allophones_job.out_num_monophone_states
     elif n_phones == 2:
-        EstimateCartJob()
-
         cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
             f"cart_and_lda_{corpus_name}_di"
         ]
