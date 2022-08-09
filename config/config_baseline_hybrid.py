@@ -389,7 +389,7 @@ def get_hybrid_system(
 
 def run_hybrid(
     gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
-) -> typing.Dict[typing.Tuple[int, str], HybridSystem]:
+) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
@@ -416,6 +416,10 @@ def run_hybrid(
     for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr in itertools.product(
         lm.items(), N_PHONES, sizes, num_heads, lr
     ):
+        if conf_size % conf_num_heads != 0:
+            print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
+            continue
+
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
             print(f"hy {name}")
@@ -439,6 +443,6 @@ def run_hybrid(
             steps.add_step("nn", nn_args)
             system.run(steps)
 
-            results[n_phone, lm] = system
+            results[name] = system
 
     return results
