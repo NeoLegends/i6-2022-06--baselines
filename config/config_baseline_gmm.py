@@ -40,7 +40,7 @@ def _run_gmm(
     )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
-    cart_di_args = gmm_setups.get_cart_args()
+    cart_di_args = gmm_setups.get_cart_args(phones=2)
     cart_di_args.cart_lda_args["name"] = "di"
     cart_tri_args = gmm_setups.get_cart_args()
     tri_args = gmm_setups.get_triphone_args()
