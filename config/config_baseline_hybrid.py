@@ -97,16 +97,16 @@ def get_returnn_config(
     num_outputs: int,
     num_epochs: int,
     conf_size: int,
+    conf_num_heads: int,
     batch_size: int = 10000,
     lr: str = "v1",
 ) -> returnn.ReturnnConfig:
     assert lr in ["v1", "v2"]
 
-    num_heads = 8
     encoder_args = get_encoder_args(
-        num_heads=num_heads,
-        key_dim_per_head=int(conf_size / num_heads),
-        value_dim_per_head=int(conf_size / num_heads),
+        num_heads=conf_num_heads,
+        key_dim_per_head=int(conf_size / conf_num_heads),
+        value_dim_per_head=int(conf_size / conf_num_heads),
         model_dim=conf_size,
         ff_dim=int(conf_size * 4),
         kernel_size=32,
@@ -225,8 +225,10 @@ def get_hybrid_args(
 def get_nn_args(
     *,
     gmm_system: GmmSystem,
+    name: str,
     corpus_name: str,
     conf_size: int,
+    conf_num_heads: int,
     n_phones: int,
     lr: str,
 ) -> rasr_util.HybridArgs:
@@ -249,12 +251,12 @@ def get_nn_args(
     num_epochs = 500
     batch_size = 4096 if conf_size > 256 else 10000
 
-    name = f"conf-ph:{n_phones}-dim:{conf_size}-lr:{lr}"
     dict_cfg = get_returnn_config(
         num_inputs=50,
         num_outputs=n_outputs,
         num_epochs=num_epochs,
         conf_size=conf_size,
+        conf_num_heads=conf_num_heads,
         batch_size=batch_size,
         lr=lr,
     )
@@ -406,17 +408,17 @@ def run_hybrid(
     corpus_name = "train-other-960"
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     lr = ["v1", "v2"]
-    sizes = [256, 512]
+    num_heads = [8, 12]
+    sizes = [256, 512, 768]
 
     results = {}
 
-    for (lm, gmm_sys), n_phone, conf_size, lr in itertools.product(
-        lm.items(), N_PHONES, sizes, lr
+    for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr in itertools.product(
+        lm.items(), N_PHONES, sizes, num_heads, lr
     ):
-        name = f"hy ph:{n_phones_to_str(n_phone)} dim:{conf_size} lr:{lr}"
-        print(name)
-
+        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
+            print(f"hy {name}")
             system = get_hybrid_system(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
@@ -425,8 +427,10 @@ def run_hybrid(
             )
             nn_args = get_nn_args(
                 gmm_system=gmm_sys,
+                name=name,
                 corpus_name=corpus_name,
                 conf_size=conf_size,
+                conf_num_heads=conf_num_heads,
                 n_phones=n_phone,
                 lr=lr,
             )
