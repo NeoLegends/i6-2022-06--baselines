@@ -79,8 +79,8 @@ def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
 
         lr_peak = 1e-4
         rates = (
-            np.linspace(lr_peak / 10, lr_peak, int(num_epochs * 0.45))
-            + np.linspace(lr_peak, lr_peak / 10, int(num_epochs * 0.45))
+            list(np.linspace(lr_peak / 10, lr_peak, int(num_epochs * 0.45)))
+            + list(np.linspace(lr_peak, lr_peak / 10, int(num_epochs * 0.45)))
             + [1e-6]
         )
         return {
