@@ -402,7 +402,7 @@ def run_hybrid(
     corpus_name = "train-other-960"
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     lr = ["v1", "v2"]
-    num_heads = [8, 12, 32]
+    num_heads = [12, 32]
     sizes = [512, 768]
 
     results = {}
