@@ -7,7 +7,6 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from i6_core.cart import EstimateCartJob
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -25,15 +24,15 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
-from i6_private.users.gunz.system_librispeech.get_network_args import (
-    get_encoder_args,
-    get_network_args,
-)
-from i6_private.users.gunz.system_librispeech.specaugment import (
+from i6_private.users.gunz.setups.common.specaugment import (
     mask as sa_mask,
     random_mask as sa_random_mask,
     summary as sa_summary,
     transform as sa_transform,
+)
+from i6_private.users.gunz.system_librispeech.get_network_args import (
+    get_encoder_args,
+    get_network_args,
 )
 from i6_private.users.gunz.system_librispeech.transformer_network import (
     attention_for_hybrid,
@@ -329,9 +328,7 @@ def get_hybrid_system(
         nn_devtrain_data.crp.acoustic_model_config.state_tying.file = (
             cart_job.last_cart_tree
         )
-        nn_cv_data.crp.acoustic_model_config.state_tying.file = (
-            cart_job.last_cart_tree
-        )
+        nn_cv_data.crp.acoustic_model_config.state_tying.file = cart_job.last_cart_tree
 
         # use Raissi triphone alignment (for now)
         align = tk.Path(RAISSI_ALIGNMENT)
