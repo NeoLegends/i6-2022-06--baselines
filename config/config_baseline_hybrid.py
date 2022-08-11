@@ -247,7 +247,16 @@ def get_nn_args(
         n_outputs = cart_job.last_num_cart_labels
 
     num_epochs = 500
-    batch_size = {256: 10000, 512: 4096, 768: 2048}
+
+    batch_sizes = {
+        (256, 12): 10000,
+        (256, 32): 10000,
+        (512, 12): 4096,
+        (512, 32): 3584,
+        (768, 12): 2048,
+        (786, 32): 2048,
+    }
+    batch_size = batch_sizes.get((conf_size, conf_num_heads), min(batch_sizes.values()))
 
     dict_cfg = get_returnn_config(
         num_inputs=50,
@@ -255,7 +264,7 @@ def get_nn_args(
         num_epochs=num_epochs,
         conf_size=conf_size,
         conf_num_heads=conf_num_heads,
-        batch_size=batch_size.get(conf_size, 4096),
+        batch_size=batch_size,
         lr=lr,
     )
     nn_args = get_hybrid_args(
