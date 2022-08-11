@@ -14,8 +14,6 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 import i6_private.users.gunz.setups.ls.pipeline_gmm_args as gmm_setups
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as data_setups
 
-from .lbs import get_data_lstm_lm, get_data_4gram_lm
-
 
 def _run_gmm(
     lm: str, train_data_inputs, dev_data_inputs, test_data_inputs
@@ -68,7 +66,9 @@ def _run_gmm(
     return lbs_gmm_system
 
 
-def run_gmm() -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
+def run_gmm(
+    returnn_root: tk.Path, returnn_python_exe: tk.Path
+) -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
@@ -77,11 +77,13 @@ def run_gmm() -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
     # ******************** GMM Init ********************
 
     with tk.block("4gram"):
-        train_4gram, dev_4gram, test_4gram = get_data_4gram_lm()
+        train_4gram, dev_4gram, test_4gram = data_setups.get_data_inputs()
         gmm_4gram = _run_gmm("4gram", train_4gram, dev_4gram, test_4gram)
 
     # with tk.block("lstm"):
-    #     train_lstm, dev_lstm, test_lstm = get_data_lstm_lm()
+    #     train_lstm, dev_lstm, test_lstm = data_setups.get_data_inputs_lstm_lm(
+    #         returnn_root=returnn_root, returnn_python_exe=returnn_python_exe
+    #     )
     #     gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
 
     return gmm_4gram, None

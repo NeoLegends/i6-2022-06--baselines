@@ -16,7 +16,6 @@ from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
 import i6_core.text as text
-import i6_core.tools as tools
 
 from i6_experiments.common.setups.rasr import GmmSystem, ReturnnRasrDataInput
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
@@ -391,20 +390,12 @@ def get_hybrid_system(
 
 
 def run_hybrid(
-    gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
+    returnn_root: tk.Path, gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
-
-    # ******************** git setup ********************
-
-    clone_r_job = tools.CloneGitRepositoryJob(
-        url="https://github.com/rwth-i6/returnn.git",
-        commit="aadac2637ed6ec00925b9debf0dbd3c0ee20d6a6",
-        checkout_folder_name="returnn",
-    )
 
     # ******************** HY Init ********************
 
@@ -430,7 +421,7 @@ def run_hybrid(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
                 corpus_name=corpus_name,
-                returnn_root=clone_r_job.out_repository,
+                returnn_root=returnn_root,
             )
             nn_args = get_nn_args(
                 gmm_system=gmm_sys,
