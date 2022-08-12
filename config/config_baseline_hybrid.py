@@ -11,7 +11,7 @@ from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
 import i6_core.corpus as corpus_recipe
-from i6_core.lexicon import StoreAllophonesJob
+from i6_core.lexicon import StoreAllophonesJob, DumpStateTyingJob
 from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
@@ -447,5 +447,10 @@ def run_hybrid(
             system.run(steps)
 
             results[name] = system
+
+            if n_phone == 2:
+                tieCsp = system.crp["train-other-960.train"]
+                dumpStateTying = DumpStateTyingJob(tieCsp)
+                tk.register_output(f'diphone/tying', dumpStateTying.out_state_tying)
 
     return results
