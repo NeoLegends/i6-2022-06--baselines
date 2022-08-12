@@ -449,8 +449,11 @@ def run_hybrid(
             results[name] = system
 
             if n_phone == 2:
-                tieCsp = system.crp["train-other-960.train"]
-                dumpStateTying = DumpStateTyingJob(tieCsp)
-                tk.register_output(f'diphone/tying', dumpStateTying.out_state_tying)
+                tie_crp = system.train_input_data["train-other-960.train"].get_crp()
+                dumpStateTying = DumpStateTyingJob(tie_crp)
+                tk.register_output(
+                    f"diphone/tying-{conf_size}-{conf_num_heads}-{lr}",
+                    dumpStateTying.out_state_tying,
+                )
 
     return results
