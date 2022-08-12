@@ -7,6 +7,12 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
+from i6_core.cart import EstimateCartJob, AccumulateCartStatisticsJob
+from i6_core.features import basic_cache_flow
+from i6_private.users.gunz.cart import (
+    DiphoneCartQuestionsWithoutStress,
+    PythonDiphoneCartQuestions,
+)
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -449,7 +455,41 @@ def run_hybrid(
             results[name] = system
 
             if n_phone == 2:
-                tie_crp = system.train_input_data["train-other-960.train"].get_crp()
+                tie_crp = copy.deepcopy(
+                    system.train_input_data["train-other-960.train"].get_crp()
+                )
+
+                cart_questions_class = DiphoneCartQuestionsWithoutStress(
+                    max_leaves=12001, min_obs=1000, add_unknown=True
+                )
+                cart_questions = PythonDiphoneCartQuestions(
+                    phonemes=cart_questions_class.phonemes_boundary_special,
+                    steps=cart_questions_class.steps,
+                    max_leaves=12001,
+                    hmm_states=3,
+                )
+
+                tie_crp.acoustic_model_config.state_tying.type = "monophone"
+                del tie_crp.acoustic_model_config.state_tying.file
+
+                stats = AccumulateCartStatisticsJob(
+                    tie_crp,
+                    alignment_flow=basic_cache_flow(
+                        system.train_input_data["trains-other-960.train"].alignments
+                    ),
+                )
+                j = EstimateCartJob(
+                    tie_crp, questions=cart_questions, cart_examples=stats.out_cart_sum
+                )
+                tk.register_output(
+                    f"diphone-cart-{conf_size}-{conf_num_heads}-{lr}.tree",
+                    j.out_cart_tree,
+                )
+                tk.register_output(
+                    f"diphone-cart-{conf_size}-{conf_num_heads}-{lr}.labels",
+                    j.out_num_labels,
+                )
+
                 dumpStateTying = DumpStateTyingJob(tie_crp)
                 tk.register_output(
                     f"diphone/tying-{conf_size}-{conf_num_heads}-{lr}",
