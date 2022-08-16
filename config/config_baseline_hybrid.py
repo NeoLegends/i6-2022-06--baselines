@@ -7,15 +7,11 @@ import os
 import typing
 
 # -------------------- Sisyphus --------------------
-from i6_core.cart import EstimateCartJob, AccumulateCartStatisticsJob
-from i6_core.features import basic_cache_flow
-from i6_private.users.gunz.cart import (
-    DiphoneCartQuestionsWithoutStress,
-    PythonDiphoneCartQuestions,
-)
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
+from i6_core import features, meta, mm
+from i6_core.cart import EstimateCartJob, AccumulateCartStatisticsJob
 import i6_core.corpus as corpus_recipe
 from i6_core.lexicon import StoreAllophonesJob, DumpStateTyingJob
 from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
@@ -28,6 +24,10 @@ from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 
+from i6_private.users.gunz.cart import (
+    DiphoneCartQuestionsWithoutStress,
+    PythonDiphoneCartQuestions,
+)
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
 from i6_private.users.gunz.setups.common.specaugment import (
     mask as sa_mask,
@@ -235,6 +235,7 @@ def get_nn_args(
     conf_num_heads: int,
     n_phones: int,
     lr: str,
+    diphone_num_out: typing.Optional[int] = None,
 ) -> rasr_util.HybridArgs:
     if n_phones == 1:
         allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
@@ -242,10 +243,9 @@ def get_nn_args(
         ]
         n_outputs = allophones_job.out_num_monophone_states
     elif n_phones == 2:
-        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
-            f"cart_and_lda_{corpus_name}_di"
-        ]
-        n_outputs = cart_job.last_num_cart_labels
+        assert diphone_num_out is not None
+
+        n_outputs = diphone_num_out
     else:
         cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
             f"cart_and_lda_{corpus_name}_mono"
@@ -280,12 +280,50 @@ def get_nn_args(
     return nn_args
 
 
+def get_diphone_cart(*, gmm_system: GmmSystem) -> typing.Tuple[tk.Path, int]:
+    tie_crp = copy.deepcopy(gmm_system.crp["train-other-960"])
+
+    cart_questions_class = DiphoneCartQuestionsWithoutStress(
+        max_leaves=12001, min_obs=1000, add_unknown=True
+    )
+    cart_questions = PythonDiphoneCartQuestions(
+        phonemes=cart_questions_class.phonemes_boundary_special,
+        steps=cart_questions_class.steps,
+        max_leaves=12001,
+        hmm_states=3,
+    )
+
+    tie_crp.acoustic_model_config.state_tying.type = "monophone"
+    del tie_crp.acoustic_model_config.state_tying.file
+
+    alignment = meta.select_element(
+        gmm_system.alignments, "train-other-960", "train_tri"
+    )
+    feature_flow = gmm_system.feature_flows["train-other-960"]["mfcc+deriv+norm"]
+    alignment_flow = mm.cached_alignment_flow(feature_flow, alignment)
+
+    embed()
+
+    stats = AccumulateCartStatisticsJob(tie_crp, alignment_flow=alignment_flow)
+    j = EstimateCartJob(
+        tie_crp, questions=cart_questions, cart_examples=stats.out_cart_sum
+    )
+    tk.register_output("diphone/cart.tree.xml.gz", j.out_cart_tree)
+    tk.register_output("diphone/cart.labels", j.out_num_labels)
+
+    dump_state_tying_job = DumpStateTyingJob(tie_crp)
+    tk.register_output("diphone/cart.tying", dump_state_tying_job.out_state_tying)
+
+    return j.out_cart_tree, j.out_num_labels
+
+
 def get_hybrid_system(
     *,
     corpus_name: str,
     n_phones: int,
     gmm_system: GmmSystem,
     returnn_root: tk.Path,
+    diphone_state_tying_file: typing.Optional[tk.Path] = None,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
 
@@ -333,16 +371,15 @@ def get_hybrid_system(
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
-        cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
-            f"cart_and_lda_{corpus_name}_di"
-        ]
+        assert diphone_state_tying_file is not None
+
         nn_train_data.crp.acoustic_model_config.state_tying.file = (
-            cart_job.last_cart_tree
+            diphone_state_tying_file
         )
         nn_devtrain_data.crp.acoustic_model_config.state_tying.file = (
-            cart_job.last_cart_tree
+            diphone_state_tying_file
         )
-        nn_cv_data.crp.acoustic_model_config.state_tying.file = cart_job.last_cart_tree
+        nn_cv_data.crp.acoustic_model_config.state_tying.file = diphone_state_tying_file
 
         # use Raissi triphone alignment (for now)
         align = tk.Path(RAISSI_ALIGNMENT)
@@ -431,12 +468,16 @@ def run_hybrid(
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
+            if n_phone == 2:
+                diphone_cart, num_diphones = get_diphone_cart(gmm_system=gmm_sys)
+
             print(f"hy {name}")
             system = get_hybrid_system(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
+                diphone_state_tying_file=diphone_cart,
             )
             nn_args = get_nn_args(
                 gmm_system=gmm_sys,
@@ -446,6 +487,7 @@ def run_hybrid(
                 conf_num_heads=conf_num_heads,
                 n_phones=n_phone,
                 lr=lr,
+                diphone_num_out=num_diphones,
             )
 
             steps = rasr_util.RasrSteps()
@@ -453,47 +495,5 @@ def run_hybrid(
             system.run(steps)
 
             results[name] = system
-
-            if n_phone == 2:
-                tie_crp = copy.deepcopy(
-                    system.train_input_data["train-other-960.train"].get_crp()
-                )
-
-                cart_questions_class = DiphoneCartQuestionsWithoutStress(
-                    max_leaves=12001, min_obs=1000, add_unknown=True
-                )
-                cart_questions = PythonDiphoneCartQuestions(
-                    phonemes=cart_questions_class.phonemes_boundary_special,
-                    steps=cart_questions_class.steps,
-                    max_leaves=12001,
-                    hmm_states=3,
-                )
-
-                tie_crp.acoustic_model_config.state_tying.type = "monophone"
-                del tie_crp.acoustic_model_config.state_tying.file
-
-                stats = AccumulateCartStatisticsJob(
-                    tie_crp,
-                    alignment_flow=basic_cache_flow(
-                        system.train_input_data["trains-other-960.train"].alignments
-                    ),
-                )
-                j = EstimateCartJob(
-                    tie_crp, questions=cart_questions, cart_examples=stats.out_cart_sum
-                )
-                tk.register_output(
-                    f"diphone-cart-{conf_size}-{conf_num_heads}-{lr}.tree",
-                    j.out_cart_tree,
-                )
-                tk.register_output(
-                    f"diphone-cart-{conf_size}-{conf_num_heads}-{lr}.labels",
-                    j.out_num_labels,
-                )
-
-                dumpStateTying = DumpStateTyingJob(tie_crp)
-                tk.register_output(
-                    f"diphone/tying-{conf_size}-{conf_num_heads}-{lr}",
-                    dumpStateTying.out_state_tying,
-                )
 
     return results

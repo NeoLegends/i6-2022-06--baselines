@@ -38,7 +38,6 @@ def _run_gmm(
     )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
-    cart_di_args = gmm_setups.get_cart_args(name="di", phones=2)
     cart_tri_args = gmm_setups.get_cart_args()
     tri_args = gmm_setups.get_triphone_args()
     final_output_args = gmm_setups.get_final_output()
@@ -46,8 +45,7 @@ def _run_gmm(
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("cart_di", cart_di_args)
-    steps.add_step("cart_tri", cart_tri_args)
+    steps.add_step("cart", cart_tri_args)
     steps.add_step("tri", tri_args)
     steps.add_step("output", final_output_args)
 
