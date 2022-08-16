@@ -468,8 +468,9 @@ def run_hybrid(
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
-            if n_phone == 2:
-                diphone_cart, num_diphones = get_diphone_cart(gmm_system=gmm_sys)
+            diphone_cart, num_diphones = (
+                get_diphone_cart(gmm_system=gmm_sys) if n_phone == 2 else [None, None]
+            )
 
             print(f"hy {name}")
             system = get_hybrid_system(
