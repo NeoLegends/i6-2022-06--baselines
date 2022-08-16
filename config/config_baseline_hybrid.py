@@ -302,8 +302,6 @@ def get_diphone_cart(*, gmm_system: GmmSystem) -> typing.Tuple[tk.Path, int]:
     feature_flow = gmm_system.feature_flows["train-other-960"]["mfcc+deriv+norm"]
     alignment_flow = mm.cached_alignment_flow(feature_flow, alignment)
 
-    embed()
-
     stats = AccumulateCartStatisticsJob(tie_crp, alignment_flow=alignment_flow)
     j = EstimateCartJob(
         tie_crp, questions=cart_questions, cart_examples=stats.out_cart_sum
