@@ -299,8 +299,13 @@ def get_diphone_cart(*, gmm_system: GmmSystem) -> typing.Tuple[tk.Path, int]:
     alignment = meta.select_element(
         gmm_system.alignments, "train-other-960", "train_tri"
     )
-    feature_flow = gmm_system.feature_flows["train-other-960"]["mfcc+deriv+norm"]
-    alignment_flow = mm.cached_alignment_flow(feature_flow, alignment)
+    # feature_flow = gmm_system.feature_flows["train-other-960"]["mfcc+deriv+norm"]
+
+    lda_matrix = gmm_system.lda_matrices["train-other-960"]["mono"]
+    context_flow = gmm_system.feature_flows["train-other-960"]["mfcc+context"]
+    lda_flow = features.add_linear_transform(context_flow, lda_matrix)
+
+    alignment_flow = mm.cached_alignment_flow(lda_flow, alignment)
 
     stats = AccumulateCartStatisticsJob(tie_crp, alignment_flow=alignment_flow)
     j = EstimateCartJob(
