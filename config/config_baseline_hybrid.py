@@ -280,8 +280,10 @@ def get_nn_args(
     return nn_args
 
 
-def get_diphone_cart(*, gmm_system: GmmSystem) -> typing.Tuple[tk.Path, int]:
-    tie_crp = copy.deepcopy(gmm_system.crp["train-other-960"])
+def get_diphone_cart(
+    *, corpus_name: str, gmm_system: GmmSystem
+) -> typing.Tuple[tk.Path, int]:
+    tie_crp = copy.deepcopy(gmm_system.crp[corpus_name])
 
     cart_questions_class = DiphoneCartQuestionsWithoutStress(
         max_leaves=12001, min_obs=1000, add_unknown=True
@@ -296,10 +298,8 @@ def get_diphone_cart(*, gmm_system: GmmSystem) -> typing.Tuple[tk.Path, int]:
     tie_crp.acoustic_model_config.state_tying.type = "monophone"
     del tie_crp.acoustic_model_config.state_tying.file
 
-    alignment = meta.select_element(
-        gmm_system.alignments, "train-other-960", "train_tri"
-    )
-    lda_flow = gmm_system.feature_flows["train-other-960"]["mfcc+context+lda"]
+    alignment = meta.select_element(gmm_system.alignments, corpus_name, "train_tri")
+    lda_flow = gmm_system.feature_flows[corpus_name]["mfcc+context+lda"]
     alignment_flow = mm.cached_alignment_flow(lda_flow, alignment)
 
     stats = AccumulateCartStatisticsJob(tie_crp, alignment_flow=alignment_flow)
@@ -467,7 +467,9 @@ def run_hybrid(
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
             diphone_cart, num_diphones = (
-                get_diphone_cart(gmm_system=gmm_sys) if n_phone == 2 else [None, None]
+                get_diphone_cart(corpus_name=corpus_name, gmm_system=gmm_sys)
+                if n_phone == 2
+                else [None, None]
             )
 
             print(f"hy {name}")
