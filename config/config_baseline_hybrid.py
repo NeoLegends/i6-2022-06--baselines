@@ -310,8 +310,8 @@ def get_diphone_cart(
     tk.register_output("diphone/cart.labels", cart_lda.last_num_cart_labels)
 
     dump_crp = copy.deepcopy(gmm_system.crp[corpus_name])
-    dump_crp.acoustic_model.state_tying.file = cart_lda.last_cart_tree
-    dump_crp.acoustic_model.state_tying.type = "cart"
+    dump_crp.acoustic_model_config.state_tying.file = cart_lda.last_cart_tree
+    dump_crp.acoustic_model_config.state_tying.type = "cart"
 
     dump_state_tying_job = DumpStateTyingJob(dump_crp)
     tk.register_output("diphone/cart.tying", dump_state_tying_job.out_state_tying)
