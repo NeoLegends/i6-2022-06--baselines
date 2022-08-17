@@ -285,12 +285,12 @@ def get_diphone_cart(
     tie_crp = copy.deepcopy(gmm_system.crp[corpus_name])
 
     cart_questions_class = DiphoneCartQuestionsWithoutStress(
-        max_leaves=4111, min_obs=1000, add_unknown=True
+        max_leaves=4000, min_obs=1000, add_unknown=True
     )
     cart_questions = PythonDiphoneCartQuestions(
         phonemes=cart_questions_class.phonemes_boundary_special,
         steps=cart_questions_class.steps,
-        max_leaves=4111,
+        max_leaves=4000,
         hmm_states=3,
     )
 
