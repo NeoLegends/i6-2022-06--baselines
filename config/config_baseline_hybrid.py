@@ -295,24 +295,28 @@ def get_diphone_cart(
         hmm_states=3,
     )
 
-    tie_crp.acoustic_model_config.state_tying.type = "monophone"
-    del tie_crp.acoustic_model_config.state_tying.file
-
-    alignment = meta.select_element(gmm_system.alignments, corpus_name, "train_tri")
-    lda_flow = gmm_system.feature_flows[corpus_name]["mfcc+context+lda"]
-    alignment_flow = mm.cached_alignment_flow(lda_flow, alignment)
-
-    stats = AccumulateCartStatisticsJob(tie_crp, alignment_flow=alignment_flow)
-    j = EstimateCartJob(
-        tie_crp, questions=cart_questions, cart_examples=stats.out_cart_sum
+    cart_lda = CartAndLDA(
+        original_crp=tie_crp,
+        initial_flow=gmm_system.feature_flows[corpus_name]["mfcc+deriv+norm"],
+        context_flow=gmm_system.feature_flows[corpus_name]["mfcc+context"],
+        alignment=meta.select_element(gmm_system.alignments, corpus_name, "train_tri"),
+        questions=cart_questions,
+        num_dim=48,
+        num_iter=2,
+        generalized_eigenvalue_args={"all": {"verification_tolerance": 1e16}},
     )
-    tk.register_output("diphone/cart.tree.xml.gz", j.out_cart_tree)
-    tk.register_output("diphone/cart.labels", j.out_num_labels)
 
-    dump_state_tying_job = DumpStateTyingJob(tie_crp)
+    tk.register_output("diphone/cart.tree.xml.gz", cart_lda.last_cart_tree)
+    tk.register_output("diphone/cart.labels", cart_lda.last_num_cart_labels)
+
+    dump_crp = copy.deepcopy(gmm_system.crp[corpus_name])
+    dump_crp.acoustic_model.state_tying.file = cart_lda.last_cart_tree
+    dump_crp.acoustic_model.state_tying.type = "cart"
+
+    dump_state_tying_job = DumpStateTyingJob(dump_crp)
     tk.register_output("diphone/cart.tying", dump_state_tying_job.out_state_tying)
 
-    return j.out_cart_tree, j.out_num_labels
+    return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
 
 def get_hybrid_system(
