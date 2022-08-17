@@ -293,6 +293,7 @@ def get_diphone_cart(
         max_leaves=12001,
         hmm_states=3,
     )
+    cart_questions = tk.Path("/u/mgunz/gunz/dependencies/cart-diphone-questions.xml")
 
     cart_lda = CartAndLDA(
         original_crp=tie_crp,
