@@ -2,10 +2,12 @@ from sisyphus import gs, tk, Path
 
 import i6_core.tools as tools
 
-import config_10_baseline_gmm as gmm
-import config_11_baseline_di_cart as di_cart
-import config_20_baseline_hybrid as hybrid
-import config_30_baseline_fh as fh
+from . import (
+    config_10_baseline_gmm as gmm,
+    config_11_baseline_di_cart as di_cart,
+    config_20_baseline_hybrid as hybrid,
+    config_30_baseline_fh as fh,
+)
 
 
 def main():
