@@ -15,7 +15,7 @@ from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 
 from .config import DIPHONE_CART, DIPHONE_CART_NUM_LABELS
-from .config_baseline_hybrid import get_hybrid_system, get_nn_args
+from .config_20_baseline_hybrid import get_hybrid_system, get_nn_args
 
 
 def run_hybrid(

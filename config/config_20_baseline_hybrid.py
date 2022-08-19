@@ -10,9 +10,8 @@ import typing
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
-from i6_core import meta
 import i6_core.corpus as corpus_recipe
-from i6_core.lexicon import StoreAllophonesJob, DumpStateTyingJob
+from i6_core.lexicon import StoreAllophonesJob
 from i6_core.meta import CartAndLDA, AlignSplitAccumulateSequence
 import i6_core.returnn as returnn
 import i6_core.rasr as rasr
@@ -23,10 +22,6 @@ from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 
-from i6_private.users.gunz.cart import (
-    DiphoneCartQuestionsWithoutStress,
-    PythonDiphoneCartQuestions,
-)
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
 from i6_private.users.gunz.setups.common.specaugment import (
     mask as sa_mask,
@@ -279,6 +274,7 @@ def get_nn_args(
     return nn_args
 
 
+"""
 def get_diphone_cart(
     *, corpus_name: str, gmm_system: GmmSystem
 ) -> typing.Tuple[tk.Path, int]:
@@ -317,6 +313,7 @@ def get_diphone_cart(
     tk.register_output("diphone/cart.tying", dump_state_tying_job.out_state_tying)
 
     return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
+"""
 
 
 def get_hybrid_system(
