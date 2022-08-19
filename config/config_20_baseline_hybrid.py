@@ -443,7 +443,7 @@ def get_hybrid_system(
     return lbs_hy_system
 
 
-def run_hybrid(
+def run(
     returnn_root: tk.Path,
     gmm_4gram: GmmSystem,
     gmm_lstm: GmmSystem,

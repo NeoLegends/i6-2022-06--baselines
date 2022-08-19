@@ -66,7 +66,7 @@ def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
     return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
 
-def generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
+def run() -> typing.Tuple[tk.Path, int]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]

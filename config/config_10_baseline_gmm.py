@@ -64,7 +64,7 @@ def _run_gmm(
     return lbs_gmm_system
 
 
-def run_gmm(
+def run(
     returnn_root: tk.Path, returnn_python_exe: tk.Path
 ) -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
     # ******************** Settings ********************
