@@ -19,7 +19,7 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 def run_fh(gmm_4gram: GmmSystem, gmm_lstm: GmmSystem):
     # ******************** Settings ********************
 
-    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][9:]
+    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** HY Init ********************
