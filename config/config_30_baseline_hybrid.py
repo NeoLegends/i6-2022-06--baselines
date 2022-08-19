@@ -444,11 +444,15 @@ def get_hybrid_system(
 
 
 def run_hybrid(
-    returnn_root: tk.Path, gmm_4gram: GmmSystem, gmm_lstm: GmmSystem
+    returnn_root: tk.Path,
+    gmm_4gram: GmmSystem,
+    gmm_lstm: GmmSystem,
+    diphone_cart: tk.Path,
+    diphone_cart_num_labels: int,
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
-    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
+    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][9:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** HY Init ********************
@@ -470,12 +474,6 @@ def run_hybrid(
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
         with tk.block(name):
-            diphone_cart, num_diphones = (
-                get_diphone_cart(corpus_name=corpus_name, gmm_system=gmm_sys)
-                if n_phone == 2
-                else [None, None]
-            )
-
             print(f"hy {name}")
             system = get_hybrid_system(
                 n_phones=n_phone,
@@ -492,7 +490,7 @@ def run_hybrid(
                 conf_num_heads=conf_num_heads,
                 n_phones=n_phone,
                 lr=lr,
-                diphone_num_out=num_diphones,
+                diphone_num_out=diphone_cart_num_labels,
             )
 
             steps = rasr_util.RasrSteps()

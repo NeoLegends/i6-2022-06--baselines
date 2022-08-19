@@ -1,7 +1,8 @@
 import os
+import typing
 
 # -------------------- Sisyphus --------------------
-
+from i6_core.meta import CartAndLDA
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -15,10 +16,10 @@ import i6_private.users.gunz.setups.ls.pipeline_gmm_args as gmm_setups
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as data_setups
 
 
-def _run_gmm(
-    lm: str, train_data_inputs, dev_data_inputs, test_data_inputs
-) -> gmm_system.GmmSystem:
-    print(f"GMM {lm} LM")
+def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
+    print(f"Diphone CART")
+
+    train_data_inputs, dev_data_inputs, test_data_inputs = data_setups.get_data_inputs()
 
     mfcc_cepstrum_options = {
         "normalize": False,
@@ -38,16 +39,14 @@ def _run_gmm(
     )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
-    cart_tri_args = gmm_setups.get_cart_args()
-    tri_args = gmm_setups.get_triphone_args()
-    final_output_args = gmm_setups.get_final_output()
+    cart_di_args = gmm_setups.get_cart_args(
+        name="cart_di", add_unknown=True, cart_with_stress=False, phones=2
+    )
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("cart", cart_tri_args)
-    steps.add_step("tri", tri_args)
-    steps.add_step("output", final_output_args)
+    steps.add_step("cart", cart_di_args)
 
     # ******************** GMM System ********************
 
@@ -61,27 +60,18 @@ def _run_gmm(
     )
     lbs_gmm_system.run(steps)
 
-    return lbs_gmm_system
+    cart_lda: CartAndLDA = lbs_gmm_system.jobs["train-other-960"][
+        "cart_and_lda_train-other-960_cart_di"
+    ]
+    return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
 
-def run_gmm(
-    returnn_root: tk.Path, returnn_python_exe: tk.Path
-) -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
+def generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
     # ******************** Settings ********************
 
-    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
+    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][9:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** GMM Init ********************
 
-    with tk.block("4gram"):
-        train_4gram, dev_4gram, test_4gram = data_setups.get_data_inputs()
-        gmm_4gram = _run_gmm("4gram", train_4gram, dev_4gram, test_4gram)
-
-    # with tk.block("lstm"):
-    #     train_lstm, dev_lstm, test_lstm = data_setups.get_data_inputs_lstm_lm(
-    #         returnn_root=returnn_root, returnn_python_exe=returnn_python_exe
-    #     )
-    #     gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
-
-    return gmm_4gram, None
+    return _generate_diphone_cart()
