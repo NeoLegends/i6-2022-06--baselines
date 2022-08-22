@@ -33,8 +33,6 @@ def get_returnn_config(
     batch_size: int = 10000,
     lr: str = "v1",
 ) -> returnn.ReturnnConfig:
-    assert lr in ["v1", "v2"]
-
     base_config = {
         "use_tensorflow": True,
         "debug_print_layer_output_template": True,
@@ -242,13 +240,14 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
     # ******************** HY Init ********************
 
     corpus_name = "train-other-960"
-    lr = ["v1", "v2"]
+    layers = [6]
+    lr = ["v1", "v2", "v3"]
     dim = [512]
 
     results = {}
 
-    for lr, dim in itertools.product(lr, dim):
-        name = f"blstm-ph:3-dim:{dim}-lr:{lr}"
+    for lay, lr, dim in itertools.product(layers, lr, dim):
+        name = f"blstm-ph:3-dim:{lay}x{dim}-lr:{lr}"
         with tk.block(name):
             system = get_hybrid_system(
                 n_phones=3,

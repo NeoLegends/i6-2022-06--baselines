@@ -23,6 +23,7 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_experiments.users.luescher.helpers.search_params import get_search_parameters
 
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
+import i6_private.users.gunz.setups.common.train_helpers as train_helpers
 from i6_private.users.gunz.setups.common.specaugment import (
     mask as sa_mask,
     random_mask as sa_random_mask,
@@ -52,7 +53,7 @@ def n_phones_to_str(n_phones: int) -> str:
 
 
 def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
-    assert lr_schedule in ["v1", "v2"]
+    assert lr_schedule in ["v1", "v2", "v3"]
 
     base = {
         "learning_rate_file": "lr.log",
@@ -84,6 +85,17 @@ def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
         return {
             **base,
             "learning_rates": rates,
+            "learning_rate_control": "constant",
+        }
+    elif lr_schedule == "v3":
+        # OneCycle from Wei
+
+        n = (num_epochs - 20) / 2
+        schedule = train_helpers.get_learning_rates(increase=n, decay=n, lrate=5e-5)
+
+        return {
+            **base,
+            "learning_rates": schedule,
             "learning_rate_control": "constant",
         }
     else:
@@ -456,7 +468,7 @@ def run(
 
     corpus_name = "train-other-960"
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
-    lr = ["v1", "v2"]
+    lr = ["v1", "v2", "v3"]
     num_heads = [12, 32]
     sizes = [512, 768]
 
