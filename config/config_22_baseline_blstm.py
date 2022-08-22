@@ -108,7 +108,7 @@ def get_returnn_config(
                 "n_out": blstm_size,
                 "unit": "nativelstm2",
             },
-            "center-output": {
+            "output": {
                 "class": "softmax",
                 "from": "encoder-output",
                 "loss": "ce",
