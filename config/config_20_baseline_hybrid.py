@@ -90,8 +90,8 @@ def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
     elif lr_schedule == "v3":
         # OneCycle from Wei
 
-        n = (num_epochs - 20) / 2
-        schedule = train_helpers.get_learning_rates(increase=n, decay=n, lrate=5e-5)
+        n = int(num_epochs * 0.45)
+        schedule = train_helpers.get_learning_rates(increase=n, decay=n, lrate=5e-5, reset=True)
 
         return {
             **base,
