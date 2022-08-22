@@ -111,8 +111,6 @@ def get_returnn_config(
     batch_size: int = 10000,
     lr: str = "v1",
 ) -> returnn.ReturnnConfig:
-    assert lr in ["v1", "v2"]
-
     encoder_args = get_encoder_args(
         num_heads=conf_num_heads,
         key_dim_per_head=int(conf_size / conf_num_heads),
