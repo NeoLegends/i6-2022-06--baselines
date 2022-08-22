@@ -159,6 +159,7 @@ def get_returnn_config(
                 "loss": "ce",
                 "loss_opts": {"focal_loss_factor": 2.0, "label_smoothing": 0.2},
                 "target": "classes",
+                "n_out": num_outputs,
             },
         },
     }
