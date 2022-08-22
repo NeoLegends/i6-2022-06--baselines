@@ -105,7 +105,7 @@ def get_returnn_config(
                 "direction": 1,
                 "dropout": 0.1,
                 "from": ["data"],
-                "n_out": 1000,
+                "n_out": blstm_size,
                 "unit": "nativelstm2",
             },
             "lstm_fwd_2": {
