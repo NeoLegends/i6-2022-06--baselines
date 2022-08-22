@@ -248,6 +248,8 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
 
     for lay, lr, dim in itertools.product(layers, lr, dim):
         name = f"blstm-ph:3-dim:{lay}x{dim}-lr:{lr}"
+        print(name)
+
         with tk.block(name):
             system = get_hybrid_system(
                 n_phones=3,
