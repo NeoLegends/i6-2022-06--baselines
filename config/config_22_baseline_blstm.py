@@ -15,15 +15,6 @@ from i6_experiments.common.setups.rasr import GmmSystem
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 
-from i6_private.users.gunz.setups.common.specaugment import (
-    mask as sa_mask,
-    random_mask as sa_random_mask,
-    summary as sa_summary,
-    transform as sa_transform,
-)
-
-from returnn_common.nn.encoder.blstm_cnn_specaug import make_encoder
-
 from .config_20_baseline_hybrid import get_hybrid_args, get_hybrid_system, get_lr_config
 
 
@@ -31,7 +22,6 @@ def get_returnn_config(
     num_inputs: int,
     num_outputs: int,
     num_epochs: int,
-    blstm_layers: int = 6,
     blstm_size: int = 512,
     batch_size: int = 10000,
     lr: str = "v1",
@@ -54,11 +44,123 @@ def get_returnn_config(
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
         **get_lr_config(num_epochs=num_epochs, lr_schedule=lr),
-        "network": make_encoder(
-            num_layers=blstm_layers,
-            lstm_dim=blstm_size,
-            time_reduction=1,
-        ),
+        "network": {
+            "lstm_bwd_1": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["data"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_bwd_2": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_1", "lstm_bwd_1"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_bwd_3": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_2", "lstm_bwd_2"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_bwd_4": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_3", "lstm_bwd_3"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_bwd_5": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_4", "lstm_bwd_4"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_bwd_6": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": -1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_5", "lstm_bwd_5"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_1": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["data"],
+                "n_out": 1000,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_2": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_1", "lstm_bwd_1"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_3": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_2", "lstm_bwd_2"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_4": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_3", "lstm_bwd_3"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_5": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_4", "lstm_bwd_4"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "lstm_fwd_6": {
+                "L2": 0.01,
+                "class": "rec",
+                "direction": 1,
+                "dropout": 0.1,
+                "from": ["lstm_fwd_5", "lstm_bwd_5"],
+                "n_out": blstm_size,
+                "unit": "nativelstm2",
+            },
+            "output": {
+                "class": "softmax",
+                "from": ["lstm_fwd_6", "lstm_bwd_6"],
+                "loss": "ce",
+                "loss_opts": {"focal_loss_factor": 2.0, "label_smoothing": 0.2},
+                "target": "classes",
+            },
+        },
     }
 
     base_post_config = {
@@ -75,12 +177,6 @@ def get_returnn_config(
         hash_full_python_code=True,
         python_prolog={
             "numpy": "import numpy as np",
-            "functions": [
-                sa_mask,
-                sa_random_mask,
-                sa_summary,
-                sa_transform,
-            ],
         },
         pprint_kwargs={"sort_dicts": False},
     )
