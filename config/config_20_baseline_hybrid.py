@@ -444,8 +444,8 @@ def run(
     returnn_root: tk.Path,
     gmm_4gram: GmmSystem,
     gmm_lstm: GmmSystem,
-    diphone_cart: tk.Path,
-    diphone_cart_num_labels: int,
+    diphone_cart: typing.Optional[tk.Path],
+    diphone_cart_num_labels: typing.Optional[int],
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 

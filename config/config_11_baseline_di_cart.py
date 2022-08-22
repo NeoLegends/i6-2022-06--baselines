@@ -20,23 +20,7 @@ def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
     print(f"Diphone CART")
 
     train_data_inputs, dev_data_inputs, test_data_inputs = data_setups.get_data_inputs()
-
-    mfcc_cepstrum_options = {
-        "normalize": False,
-        "outputs": 16,
-        "add_epsilon": True,
-        "epsilon": 1e-10,
-    }
-
-    gt_options_extra_args = {
-        "normalize": False,
-    }
-
-    init_args = data_setups.get_init_args(
-        dc_detection=False,
-        mfcc_cepstrum_options=mfcc_cepstrum_options,
-        gt_options_extra_args=gt_options_extra_args,
-    )
+    init_args = data_setups.get_init_args(gt_normalization=False)
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
     cart_di_args = gmm_setups.get_cart_args(
