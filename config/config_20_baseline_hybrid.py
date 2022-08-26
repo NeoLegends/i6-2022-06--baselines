@@ -286,48 +286,6 @@ def get_nn_args(
     return nn_args
 
 
-"""
-def get_diphone_cart(
-    *, corpus_name: str, gmm_system: GmmSystem
-) -> typing.Tuple[tk.Path, int]:
-    tie_crp = copy.deepcopy(gmm_system.crp[corpus_name])
-
-    cart_questions_class = DiphoneCartQuestionsWithoutStress(
-        max_leaves=12001, min_obs=1000, add_unknown=True
-    )
-    cart_questions = PythonDiphoneCartQuestions(
-        phonemes=cart_questions_class.phonemes_boundary_special,
-        steps=cart_questions_class.steps,
-        max_leaves=12001,
-        hmm_states=3,
-    )
-    cart_questions = tk.Path("/u/mgunz/gunz/dependencies/cart-diphone-questions.xml")
-
-    cart_lda = CartAndLDA(
-        original_crp=tie_crp,
-        initial_flow=gmm_system.feature_flows[corpus_name]["mfcc+deriv+norm"],
-        context_flow=gmm_system.feature_flows[corpus_name]["mfcc+context"],
-        alignment=meta.select_element(gmm_system.alignments, corpus_name, "train_tri"),
-        questions=cart_questions,
-        num_dim=48,
-        num_iter=2,
-        generalized_eigenvalue_args={"all": {"verification_tolerance": 1e16}},
-    )
-
-    tk.register_output("diphone/cart.tree.xml.gz", cart_lda.last_cart_tree)
-    tk.register_output("diphone/cart.labels", cart_lda.last_num_cart_labels)
-
-    dump_crp = copy.deepcopy(gmm_system.crp[corpus_name])
-    dump_crp.acoustic_model_config.state_tying.file = cart_lda.last_cart_tree
-    dump_crp.acoustic_model_config.state_tying.type = "cart"
-
-    dump_state_tying_job = DumpStateTyingJob(dump_crp)
-    tk.register_output("diphone/cart.tying", dump_state_tying_job.out_state_tying)
-
-    return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
-"""
-
-
 def get_hybrid_system(
     *,
     corpus_name: str,
