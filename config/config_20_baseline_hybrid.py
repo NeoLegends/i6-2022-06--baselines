@@ -216,6 +216,7 @@ def get_hybrid_args(
             "optimize_am_lm_scale": False,
             "rtf": 50,
             "mem": 16,
+            "use_gpu": True,
             "parallelize_conversion": True,
         },
     }
