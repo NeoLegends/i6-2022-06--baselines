@@ -215,7 +215,7 @@ def get_hybrid_args(
             },
             "optimize_am_lm_scale": False,
             "rtf": 50,
-            "mem": 8,
+            "mem": 16,
             "parallelize_conversion": True,
         },
     }
