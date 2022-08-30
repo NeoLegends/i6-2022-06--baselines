@@ -429,6 +429,7 @@ def run(
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     lr = ["v1", "v2", "v3"]
     num_heads = [12, 32]
+    fallback_num_heads = 8
     sizes = [512, 768]
 
     results = {}
@@ -436,11 +437,13 @@ def run(
     for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr in itertools.product(
         lm.items(), N_PHONES, sizes, num_heads, lr
     ):
-        if conf_size % conf_num_heads != 0:
-            print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
+        if conf_size % conf_num_heads != 0 and conf_size % fallback_num_heads != 0:
+            print(f"{conf_size} does not work w/ {conf_num_heads} or {fallback_num_heads} att heads, skipping")
             continue
 
-        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
+        num_heads = fallback_num_heads if conf_size % conf_num_heads != 0 else conf_num_heads
+        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{num_heads}-lr:{lr}"
+
         with tk.block(name):
             print(f"hy {name}")
             system = get_hybrid_system(
@@ -455,7 +458,7 @@ def run(
                 name=name,
                 corpus_name=corpus_name,
                 conf_size=conf_size,
-                conf_num_heads=conf_num_heads,
+                conf_num_heads=num_heads,
                 n_phones=n_phone,
                 lr=lr,
                 diphone_num_out=diphone_cart_num_labels,
