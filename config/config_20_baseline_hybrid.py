@@ -468,7 +468,7 @@ def run(
             results[name] = system
 
     for system in results.values():
-        for train_job in system.jobs[f"{corpus_name}.train_{corpus_name}.cv"]:
+        for train_job in system.jobs[f"{corpus_name}.train_{corpus_name}.cv"].values():
             train_job.rqmt["qsub_args"] = '-l qname=*2080*'
 
     return results
