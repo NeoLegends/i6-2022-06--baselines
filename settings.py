@@ -76,7 +76,6 @@ SCTK_PATH = "/u/beck/programs/sctk-2.4.0/bin/"
 RETURNN_PYTHON_EXE = "/u/rossenbach/bin/returnn_tf2.3_launcher.sh"
 # RETURNN_PYTHON_HOME = '/u/beck/programs/python/2.7.10/'
 # RETURNN_PYTHON_EXE  = '/u/beck/programs/python/2.7.10/bin/python2.7'
-# RETURNN_ROOT        = '/u/raissi/setups/swb/crnn/'
 RETURNN_ROOT = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "recipe/returnn"
 )
@@ -116,6 +115,7 @@ DEFAULT_ENVIRONMENT_SET = {
             "/usr/lib/nvidia-418",
             "/usr/local/acml-4.4.0/gfortran64_mp/lib/",
             "/usr/local/acml-4.4.0/gfortran64/lib",
+            "/work/tools/asr/python/3.8.0_tf_2.3-v1-generic+cuda10.1/lib/python3.8/site-packages/tensorflow"
         ]
     ),
     "CUDA_PATH": ":".join(
