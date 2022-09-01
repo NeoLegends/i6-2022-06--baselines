@@ -91,9 +91,18 @@ def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
         # OneCycle from Wei
 
         n = int(num_epochs * 0.45)
-        schedule = train_helpers.get_learning_rates(
-            increase=n, decay=n, lrate=5e-5, reset=True
-        )
+        schedule = train_helpers.get_learning_rates(lrate=5e5, increase=n, decay=n)
+
+        return {
+            **base,
+            "learning_rates": schedule,
+            "learning_rate_control": "constant",
+        }
+    elif lr_schedule == "v4":
+        # OneCycle from Wei
+
+        n = int(num_epochs * 0.45)
+        schedule = train_helpers.get_learning_rates(increase=n, decay=n)
 
         return {
             **base,
@@ -198,7 +207,7 @@ def get_hybrid_args(
     }
     recognition_args = {
         "dev-other": {
-            "epochs": list(np.arange(250, num_epochs + 1, 10)),
+            "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 10)),
             "feature_flow_key": "gt",
             "prior_scales": [0.3],
             "pronunciation_scales": [6.0],
@@ -262,8 +271,13 @@ def get_nn_args(
     num_epochs = 500
 
     batch_sizes = {
+        (256, 8): 16000,
         (256, 12): 10000,
         (256, 32): 10000,
+        (384, 8): 14000,
+        (384, 12): 10000,
+        (384, 32): 4096,
+        (512, 8): 8192,
         (512, 12): 4096,
         (512, 32): 3584,
         (768, 12): 2048,
@@ -427,26 +441,22 @@ def run(
 
     corpus_name = "train-other-960"
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
-    lr = ["v1", "v2", "v3"]
-    num_heads = [12, 32]
-    fallback_num_heads = 8
-    sizes = [512, 768]
+    lr = ["v2", "v4"]
+    num_heads = [8]
+    sizes = [256, 384, 512]
 
     results = {}
 
     for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr in itertools.product(
         lm.items(), N_PHONES, sizes, num_heads, lr
     ):
-        if conf_size % conf_num_heads != 0 and conf_size % fallback_num_heads != 0:
+        if conf_size % conf_num_heads != 0:
             print(
-                f"{conf_size} does not work w/ {conf_num_heads} or {fallback_num_heads} att heads, skipping"
+                f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping"
             )
             continue
 
-        num_heads = (
-            fallback_num_heads if conf_size % conf_num_heads != 0 else conf_num_heads
-        )
-        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{num_heads}-lr:{lr}"
+        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
 
         with tk.block(name):
             print(f"hy {name}")
@@ -462,7 +472,7 @@ def run(
                 name=name,
                 corpus_name=corpus_name,
                 conf_size=conf_size,
-                conf_num_heads=num_heads,
+                conf_num_heads=conf_num_heads,
                 n_phones=n_phone,
                 lr=lr,
                 diphone_num_out=diphone_cart_num_labels,

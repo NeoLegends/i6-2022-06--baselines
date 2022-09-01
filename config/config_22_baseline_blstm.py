@@ -224,7 +224,7 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
 
     corpus_name = "train-other-960"
     layers = [6]
-    lr = ["v1", "v2", "v3"]
+    lr = ["v2", "v4"]
     dim = [512]
 
     results = {}

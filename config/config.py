@@ -4,3 +4,6 @@ DIPHONE_CART_NUM_LABELS = 4111
 
 N_PHONES = [1, 2, 3]
 RAISSI_ALIGNMENT = "/work/asr4/raissi/setups/librispeech/960-ls/work/i6_core/mm/alignment/AlignmentJob.hK21a0UU4iiJ/output/alignment.cache.bundle"
+
+RASR_ROOT_CLASSIC = "/work/tools/asr/rasr/20191102_generic/"
+RASR_ROOT_FH = "/u/raissi/dev/rasr_tf14py38_fh/"
