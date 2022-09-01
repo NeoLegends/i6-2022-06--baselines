@@ -208,7 +208,11 @@ def get_nn_args(
         lr=lr,
     )
     nn_args = get_hybrid_args(
-        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg, num_epochs=num_epochs
+        name=name,
+        num_outputs=n_outputs,
+        training_cfg=dict_cfg,
+        fwd_cfg=dict_cfg,
+        num_epochs=num_epochs,
     )
 
     return nn_args
@@ -230,7 +234,7 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
     results = {}
 
     for lay, lr, dim in itertools.product(layers, lr, dim):
-        name = f"blstm-ph:3-dim:{lay}x{dim}-lr:{lr}"
+        name = f"blstm-ph:3-dim:{lay}x{dim}-ep:500-lr:{lr}"
         print(name)
 
         with tk.block(name):
