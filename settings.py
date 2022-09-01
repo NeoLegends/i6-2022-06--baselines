@@ -119,6 +119,7 @@ DEFAULT_ENVIRONMENT_SET = {
             "/usr/local/acml-4.4.0/gfortran64_mp/lib/",
             "/usr/local/acml-4.4.0/gfortran64/lib",
             "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/lib/python3.8/site-packages/tensorflow_core",
+            "/work/tools/asr/python/3.8.0_tf_2.3-v1-generic+cuda10.1/lib/python3.8/site-packages/tensorflow",
         ]
     ),
     "CUDA_PATH": ":".join(
