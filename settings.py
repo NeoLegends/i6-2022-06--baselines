@@ -1,4 +1,5 @@
 import getpass
+import multiprocessing
 import os
 import sys
 
@@ -28,7 +29,7 @@ def engine():
 
     return EngineSelector(
         engines={
-            "short": LocalEngine(cpus=3),
+            "short": LocalEngine(cpus=multiprocessing.cpu_count()),
             "long": SonOfGridEngine(default_rqmt=default_rqmt),
         },
         default_engine="long",
