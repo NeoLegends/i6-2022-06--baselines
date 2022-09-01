@@ -53,8 +53,6 @@ def n_phones_to_str(n_phones: int) -> str:
 
 
 def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
-    assert lr_schedule in ["v1", "v2", "v3"]
-
     base = {
         "learning_rate_file": "lr.log",
         "min_learning_rate": 1e-6,
