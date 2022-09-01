@@ -38,7 +38,12 @@ from i6_private.users.gunz.system_librispeech.transformer_network import (
     attention_for_hybrid,
 )
 
-from .config import N_PHONES, RAISSI_ALIGNMENT
+from .config import (
+    N_PHONES,
+    RAISSI_ALIGNMENT,
+    RASR_ROOT_2021,
+    RETURNN_PYTHON_ROSSENBACH_TF23,
+)
 
 
 def n_phones_to_str(n_phones: int) -> str:
@@ -409,9 +414,10 @@ def get_hybrid_system(
 
     hybrid_init_args = lbs_data_setups.get_init_args()
 
-    rasr_path = os.path.join(gs.RASR_ROOT, "arch", gs.RASR_ARCH)
     lbs_hy_system = HybridSystem(
-        rasr_binary_path=tk.Path(rasr_path), returnn_root=returnn_root
+        rasr_binary_path=tk.Path(os.path.join(RASR_ROOT_2021, "arch", gs.RASR_ARCH)),
+        returnn_root=returnn_root,
+        returnn_python_exe=RETURNN_PYTHON_ROSSENBACH_TF23,
     )
     lbs_hy_system.init_system(
         rasr_init_args=hybrid_init_args,
