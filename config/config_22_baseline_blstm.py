@@ -208,7 +208,7 @@ def get_nn_args(
         lr=lr,
     )
     nn_args = get_hybrid_args(
-        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
+        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg, num_epochs=num_epochs
     )
 
     return nn_args
