@@ -439,7 +439,7 @@ def run(
 
     corpus_name = "train-other-960"
     lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
-    lr = ["v2", "v4"]
+    lr = ["v4"]
     num_heads = [8]
     sizes = [256, 384, 512]
 
