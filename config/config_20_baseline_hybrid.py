@@ -449,9 +449,7 @@ def run(
         lm.items(), N_PHONES, sizes, num_heads, lr
     ):
         if conf_size % conf_num_heads != 0:
-            print(
-                f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping"
-            )
+            print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
             continue
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
