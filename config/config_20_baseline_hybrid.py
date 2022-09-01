@@ -432,7 +432,7 @@ def run(
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
-    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
+    base_output_folder = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** HY Init ********************
@@ -455,6 +455,7 @@ def run(
             continue
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
+        gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.join(base_output_folder, name)
 
         with tk.block(name):
             print(f"hy {name}")
