@@ -438,10 +438,14 @@ def run(
         lm.items(), N_PHONES, sizes, num_heads, lr
     ):
         if conf_size % conf_num_heads != 0 and conf_size % fallback_num_heads != 0:
-            print(f"{conf_size} does not work w/ {conf_num_heads} or {fallback_num_heads} att heads, skipping")
+            print(
+                f"{conf_size} does not work w/ {conf_num_heads} or {fallback_num_heads} att heads, skipping"
+            )
             continue
 
-        num_heads = fallback_num_heads if conf_size % conf_num_heads != 0 else conf_num_heads
+        num_heads = (
+            fallback_num_heads if conf_size % conf_num_heads != 0 else conf_num_heads
+        )
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{num_heads}-lr:{lr}"
 
         with tk.block(name):
@@ -472,6 +476,6 @@ def run(
 
     for system in results.values():
         for train_job in system.jobs[f"{corpus_name}.train_{corpus_name}.cv"].values():
-            train_job.rqmt["qsub_args"] = '-l qname=*2080*'
+            train_job.rqmt["qsub_args"] = "-l qname=*2080*"
 
     return results
