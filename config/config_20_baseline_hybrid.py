@@ -45,6 +45,12 @@ from .config import (
     RETURNN_PYTHON_ROSSENBACH_TF23,
 )
 
+RASR_BINRARY_PATH = tk.Path(os.path.join(RASR_ROOT_2021, "arch", gs.RASR_ARCH))
+RASR_BINRARY_PATH.hash_override = "LS_RASR_PATH"
+
+RETURNN_PYTHON_EXE = tk.Path(RETURNN_PYTHON_ROSSENBACH_TF23)
+RETURNN_PYTHON_EXE.hash_override = "LS_RETURNN_PYTHON_EXE"
+
 
 def n_phones_to_str(n_phones: int) -> str:
     if n_phones == 1:
@@ -415,9 +421,9 @@ def get_hybrid_system(
     hybrid_init_args = lbs_data_setups.get_init_args()
 
     lbs_hy_system = HybridSystem(
-        rasr_binary_path=tk.Path(os.path.join(RASR_ROOT_2021, "arch", gs.RASR_ARCH)),
+        rasr_binary_path=RASR_BINRARY_PATH,
         returnn_root=returnn_root,
-        returnn_python_exe=RETURNN_PYTHON_ROSSENBACH_TF23,
+        returnn_python_exe=RETURNN_PYTHON_EXE,
     )
     lbs_hy_system.init_system(
         rasr_init_args=hybrid_init_args,
