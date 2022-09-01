@@ -217,7 +217,7 @@ def get_nn_args(
 def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
-    base_output_folder = os.path.splitext(os.path.basename(__file__))[0][7:]
+    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** HY Init ********************
@@ -232,8 +232,6 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
     for lay, lr, dim in itertools.product(layers, lr, dim):
         name = f"blstm-ph:3-dim:{lay}x{dim}-lr:{lr}"
         print(name)
-
-        gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.join(base_output_folder, name)
 
         with tk.block(name):
             system = get_hybrid_system(

@@ -89,7 +89,7 @@ def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
         # OneCycle from Wei
 
         n = int(num_epochs * 0.45)
-        schedule = train_helpers.get_learning_rates(lrate=5e5, increase=n, decay=n)
+        schedule = train_helpers.get_learning_rates(lrate=5e-5, increase=n, decay=n)
 
         return {
             **base,
@@ -249,6 +249,7 @@ def get_nn_args(
     conf_num_heads: int,
     n_phones: int,
     lr: str,
+    num_epochs: int,
     diphone_num_out: typing.Optional[int] = None,
 ) -> rasr_util.HybridArgs:
     if n_phones == 1:
@@ -265,8 +266,6 @@ def get_nn_args(
             f"cart_and_lda_{corpus_name}_mono"
         ]
         n_outputs = cart_job.last_num_cart_labels
-
-    num_epochs = 500
 
     batch_sizes = {
         (256, 8): 16000,
@@ -432,7 +431,7 @@ def run(
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
-    base_output_folder = os.path.splitext(os.path.basename(__file__))[0][7:]
+    gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
     # ******************** HY Init ********************
@@ -442,18 +441,18 @@ def run(
     lr = ["v4"]
     num_heads = [8]
     sizes = [256, 384, 512]
+    num_epochs = [300, 400, 500]
 
     results = {}
 
-    for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr in itertools.product(
-        lm.items(), N_PHONES, sizes, num_heads, lr
+    for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr, num_epochs in itertools.product(
+        lm.items(), N_PHONES, sizes, num_heads, lr, num_epochs
     ):
         if conf_size % conf_num_heads != 0:
             print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
             continue
 
-        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-lr:{lr}"
-        gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.join(base_output_folder, name)
+        name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-ep:{num_epochs}-lr:{lr}"
 
         with tk.block(name):
             print(f"hy {name}")
@@ -473,6 +472,7 @@ def run(
                 n_phones=n_phone,
                 lr=lr,
                 diphone_num_out=diphone_cart_num_labels,
+                num_epochs=num_epochs
             )
 
             steps = rasr_util.RasrSteps()
