@@ -189,7 +189,7 @@ def get_hybrid_args(
     num_outputs: int,
     training_cfg: returnn.ReturnnConfig,
     fwd_cfg: returnn.ReturnnConfig,
-    num_epochs: int = 500,
+    num_epochs: int,
 ):
     training_args = {
         "log_verbosity": 4,
@@ -292,7 +292,11 @@ def get_nn_args(
         lr=lr,
     )
     nn_args = get_hybrid_args(
-        name=name, num_outputs=n_outputs, training_cfg=dict_cfg, fwd_cfg=dict_cfg
+        name=name,
+        num_outputs=n_outputs,
+        training_cfg=dict_cfg,
+        fwd_cfg=dict_cfg,
+        num_epochs=num_epochs,
     )
 
     return nn_args
@@ -445,9 +449,14 @@ def run(
 
     results = {}
 
-    for (lm, gmm_sys), n_phone, conf_size, conf_num_heads, lr, num_epochs in itertools.product(
-        lm.items(), N_PHONES, sizes, num_heads, lr, num_epochs
-    ):
+    for (
+        (lm, gmm_sys),
+        n_phone,
+        conf_size,
+        conf_num_heads,
+        lr,
+        num_epochs,
+    ) in itertools.product(lm.items(), N_PHONES, sizes, num_heads, lr, num_epochs):
         if conf_size % conf_num_heads != 0:
             print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
             continue
@@ -472,7 +481,7 @@ def run(
                 n_phones=n_phone,
                 lr=lr,
                 diphone_num_out=diphone_cart_num_labels,
-                num_epochs=num_epochs
+                num_epochs=num_epochs,
             )
 
             steps = rasr_util.RasrSteps()
