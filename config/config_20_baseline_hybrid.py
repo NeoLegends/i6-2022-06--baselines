@@ -279,7 +279,7 @@ def get_nn_args(
         n_outputs = cart_job.last_num_cart_labels
 
     batch_sizes = {
-        (256, 8): 16000,
+        (256, 8): 14000,
         (256, 12): 10000,
         (256, 32): 10000,
         (384, 8): 14000,
