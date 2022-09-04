@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cd $(realpath .)
-/work/asr3/rossenbach/schuemann/new_simple_tts_env/bin/python3 /u/mgunz/src/sisyphus/sis $*
