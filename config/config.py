@@ -10,7 +10,7 @@ RASR_ROOT_2021 = "/work/tools/asr/rasr/20211217_tf23_cuda101_mkl/"
 RASR_ROOT_FH = "/u/raissi/dev/rasr_tf14py38_fh/"
 
 RETURNN_PYTHON_ROSSENBACH_TF23 = (
-    "/work/tools/asr/python/3.8.0_tf_2.3.4-generic+cuda10.1+mkl/bin/python3"
+    "/u/rossenbach/bin/returnn_tf2.3_launcher.sh"
 )
 RETURNN_PYTHON_GENERIC_TF15 = (
     "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8"
