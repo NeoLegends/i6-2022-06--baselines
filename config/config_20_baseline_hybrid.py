@@ -41,14 +41,14 @@ from i6_private.users.gunz.system_librispeech.transformer_network import (
 from .config import (
     N_PHONES,
     RAISSI_ALIGNMENT,
-    RASR_ROOT_2021,
-    RETURNN_PYTHON_ROSSENBACH_TF23,
+    RASR_ROOT_2019,
+    RETURNN_PYTHON_ROSSENBACH_TF15,
 )
 
-RASR_BINRARY_PATH = tk.Path(os.path.join(RASR_ROOT_2021, "arch", gs.RASR_ARCH))
+RASR_BINRARY_PATH = tk.Path(os.path.join(RASR_ROOT_2019, "arch", gs.RASR_ARCH))
 RASR_BINRARY_PATH.hash_override = "LS_RASR_PATH"
 
-RETURNN_PYTHON_EXE = tk.Path(RETURNN_PYTHON_ROSSENBACH_TF23)
+RETURNN_PYTHON_EXE = tk.Path(RETURNN_PYTHON_ROSSENBACH_TF15)
 RETURNN_PYTHON_EXE.hash_override = "LS_RETURNN_PYTHON_EXE"
 
 
