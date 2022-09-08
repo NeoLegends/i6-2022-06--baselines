@@ -408,21 +408,32 @@ def get_hybrid_system(
 
     # ******************** Test Prep ********************
 
+    dev_data = (
+        gmm_system.outputs["dev-other"]["tri"]
+        if n_phones == 3
+        else gmm_diphone.outputs["dev-other"]["di"]
+        if n_phones == 2
+        else gmm_system.outputs["dev-other"]["mono"]
+    )
+    test_data = (
+        gmm_system.outputs["test-other"]["tri"]
+        if n_phones == 3
+        else gmm_diphone.outputs["test-other"]["di"]
+        if n_phones == 2
+        else gmm_system.outputs["test-other"]["mono"]
+    )
+
     nn_dev_data_inputs = {
         # "dev-clean": lbs_gmm_system.outputs["dev-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "dev-other.dev": gmm_system.outputs["dev-other"][
-            "final"
-        ].as_returnn_rasr_data_input(),
+        "dev-other.dev": dev_data.as_returnn_rasr_data_input(),
     }
     nn_test_data_inputs = {
         # "test-clean": lbs_gmm_system.outputs["test-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "test-other.test": gmm_system.outputs["test-other"][
-            "final"
-        ].as_returnn_rasr_data_input(),
+        "test-other.test": test_data.as_returnn_rasr_data_input(),
     }
 
     # ******************** System Init ********************
