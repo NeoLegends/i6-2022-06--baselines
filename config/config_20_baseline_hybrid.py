@@ -169,6 +169,7 @@ def get_returnn_config(
     }
 
     base_post_config = {
+        "forward_output_layer": "output",
         "cleanup_old_models": {
             "keep_last_n": 5,
             "keep_best_n": 5,
