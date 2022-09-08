@@ -243,7 +243,6 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
                 gmm_system=gmm_4gram,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
-                diphone_state_tying_file=None,
             )
             nn_args = get_nn_args(
                 gmm_system=gmm_4gram,
