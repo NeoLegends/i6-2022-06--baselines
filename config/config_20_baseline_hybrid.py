@@ -261,7 +261,6 @@ def get_nn_args(
     n_phones: int,
     lr: str,
     num_epochs: int,
-    diphone_num_out: typing.Optional[int] = None,
 ) -> rasr_util.HybridArgs:
     if n_phones == 1:
         allophones_job: StoreAllophonesJob = gmm_system.jobs["train-other-960"][
@@ -269,9 +268,10 @@ def get_nn_args(
         ]
         n_outputs = allophones_job.out_num_monophone_states
     elif n_phones == 2:
-        assert diphone_num_out is not None
-
-        n_outputs = diphone_num_out
+        cart_lda: CartAndLDA = gmm_system.jobs["train-other-960"][
+            "cart_and_lda_train-other-960_cart_di"
+        ]
+        n_outputs = cart_lda.last_num_cart_labels
     else:
         cart_job: CartAndLDA = gmm_system.jobs[corpus_name][
             f"cart_and_lda_{corpus_name}_mono"
@@ -320,9 +320,7 @@ def get_hybrid_system(
     corpus_name: str,
     n_phones: int,
     gmm_system: GmmSystem,
-    gmm_diphone: typing.Optional[GmmSystem] = None,
     returnn_root: tk.Path,
-    diphone_state_tying_file: typing.Optional[tk.Path] = None,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
 
@@ -347,13 +345,8 @@ def get_hybrid_system(
 
     # ******************** Train Prep ********************
 
-    train_output = (
-        gmm_system.outputs[corpus_name]["tri"]
-        if n_phones == 3
-        else gmm_diphone.outputs[corpus_name]["di"]
-        if n_phones == 2
-        else gmm_system.outputs[corpus_name]["mono"]
-    )
+    output_name = "tri" if n_phones == 3 else "di" if n_phones == 2 else "mono"
+    train_output = gmm_system.outputs[corpus_name][output_name]
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
         shuffle_data=True
@@ -376,15 +369,17 @@ def get_hybrid_system(
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
-        assert diphone_state_tying_file is not None
+        cart_lda: CartAndLDA = gmm_system.jobs["train-other-960"][
+            "cart_and_lda_train-other-960_cart_di"
+        ]
 
         nn_train_data.crp.acoustic_model_config.state_tying.file = (
-            diphone_state_tying_file
+            cart_lda.last_cart_tree
         )
         nn_devtrain_data.crp.acoustic_model_config.state_tying.file = (
-            diphone_state_tying_file
+            cart_lda.last_cart_tree
         )
-        nn_cv_data.crp.acoustic_model_config.state_tying.file = diphone_state_tying_file
+        nn_cv_data.crp.acoustic_model_config.state_tying.file = cart_lda.last_cart_tree
 
         # use Raissi triphone alignment (for now)
         align = tk.Path(RAISSI_ALIGNMENT)
@@ -408,32 +403,21 @@ def get_hybrid_system(
 
     # ******************** Test Prep ********************
 
-    dev_data = (
-        gmm_system.outputs["dev-other"]["tri"]
-        if n_phones == 3
-        else gmm_diphone.outputs["dev-other"]["di"]
-        if n_phones == 2
-        else gmm_system.outputs["dev-other"]["mono"]
-    )
-    test_data = (
-        gmm_system.outputs["test-other"]["tri"]
-        if n_phones == 3
-        else gmm_diphone.outputs["test-other"]["di"]
-        if n_phones == 2
-        else gmm_system.outputs["test-other"]["mono"]
-    )
-
     nn_dev_data_inputs = {
         # "dev-clean": lbs_gmm_system.outputs["dev-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "dev-other.dev": dev_data.as_returnn_rasr_data_input(),
+        "dev-other.dev": gmm_system.outputs["dev-other"][
+            output_name
+        ].as_returnn_rasr_data_input(),
     }
     nn_test_data_inputs = {
         # "test-clean": lbs_gmm_system.outputs["test-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "test-other.test": test_data.as_returnn_rasr_data_input(),
+        "test-other.test": gmm_system.outputs["test-other"][
+            output_name
+        ].as_returnn_rasr_data_input(),
     }
 
     # ******************** System Init ********************
@@ -461,9 +445,6 @@ def get_hybrid_system(
 def run(
     returnn_root: tk.Path,
     gmm_4gram: GmmSystem,
-    gmm_diphone: GmmSystem,
-    diphone_cart: typing.Optional[tk.Path],
-    diphone_cart_num_labels: typing.Optional[int],
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
@@ -500,10 +481,8 @@ def run(
             system = get_hybrid_system(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
-                gmm_diphone=gmm_diphone,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
-                diphone_state_tying_file=diphone_cart,
             )
             nn_args = get_nn_args(
                 gmm_system=gmm_sys,
@@ -513,7 +492,6 @@ def run(
                 conf_num_heads=conf_num_heads,
                 n_phones=n_phone,
                 lr=lr,
-                diphone_num_out=diphone_cart_num_labels,
                 num_epochs=num_epochs,
             )
 

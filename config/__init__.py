@@ -26,14 +26,12 @@ def main():
         )
 
     with tk.block("cart-di"):
-        diphone_gmm, diphone_cart, diphone_cart_num_labels = di_cart.run()
+        # diphone_gmm, diphone_cart, diphone_cart_num_labels = di_cart.run()
+        pass
 
     with tk.block("hybrid"):
         hybrid.run(
-            diphone_cart=diphone_cart,
-            diphone_cart_num_labels=diphone_cart_num_labels,
             gmm_4gram=gmm_4gram,
-            gmm_diphone=diphone_gmm,
             returnn_root=clone_r_job.out_repository,
         )
         blyadstm.run(gmm_4gram=gmm_4gram, returnn_root=clone_r_job.out_repository)
