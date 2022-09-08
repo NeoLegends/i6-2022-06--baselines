@@ -44,8 +44,6 @@ SIS_COMMAND = [
     sys.argv[0],
 ]
 
-# /work/asr4/rossenbach/env/python38_sisyphus/bin/python
-
 WAIT_PERIOD_CACHE = 8
 WAIT_PERIOD_JOB_FS_SYNC = 8
 
@@ -65,9 +63,6 @@ RASR_ARCH = "linux-x86_64-standard"
 
 SCTK_PATH = "/u/beck/programs/sctk-2.4.0/bin/"
 
-# G2P_PATH = '/u/beck/dev/g2p/release/lib/python/g2p.py'
-# G2P_PYTHON = 'python2.7'
-
 # RETURNN_PYTHON_HOME='/work/tools/asr/python/3.8.0_tf_2.3-v1-generic+cuda10.1'
 # RETURNN_PYTHON_EXE='/work/tools/asr/python/3.8.0_tf_2.3-v1-generic+cuda10.1/bin/python'
 # RETURNN_PYTHON_HOME='/work/tools/asr/python/3.8.0_tf_2.3.4-generic+cuda10.1+mkl'
@@ -75,12 +70,6 @@ SCTK_PATH = "/u/beck/programs/sctk-2.4.0/bin/"
 # RETURNN_PYTHON_HOME='/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1'
 RETURNN_PYTHON_EXE = (
     "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8"
-)
-# RETURNN_PYTHON_EXE = "/u/rossenbach/bin/returnn_tf2.3_launcher.sh"
-# RETURNN_PYTHON_HOME = '/u/beck/programs/python/2.7.10/'
-# RETURNN_PYTHON_EXE  = '/u/beck/programs/python/2.7.10/bin/python2.7'
-RETURNN_ROOT = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "recipe/returnn"
 )
 
 RASR_PYTHON_HOME = "/work/tools/asr/python/3.8.0"
@@ -108,17 +97,15 @@ DEFAULT_ENVIRONMENT_SET = {
     "LD_LIBRARY_PATH": ":".join(
         [
             "/work/tools/asr/python/3.8.0/lib/python3.8/site-packages/numpy/.libs",
-            "/usr/local/cuda-9.1/extras/CUPTI/lib64/",
-            "/usr/local/cuda-9.1/lib64",
-            "/usr/local/cudnn-9.1-v7.1/lib64",
-            "/usr/local/acml-4.4.0/cblas_mp/lib",
-            "/usr/local/cuda-10.1/extras/CUPTI/lib64/",
             "/usr/local/cudnn-10.1-v7.6/lib64",
             "/usr/local/cuda-10.1/lib64",
-            "/usr/lib/nvidia-418",
+            "/usr/local/cuda-10.1/extras/CUPTI/lib64/",
+            "/usr/local/cuda-9.1/extras/CUPTI/lib64/",
+            "/usr/local/cuda-9.1/lib64",
+            "/usr/local/acml-4.4.0/cblas_mp/lib",
             "/usr/local/acml-4.4.0/gfortran64_mp/lib/",
             "/usr/local/acml-4.4.0/gfortran64/lib",
-            "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/lib/python3.8/site-packages/tensorflow_core",
+            "/usr/lib/nvidia-418",
             "/work/tools/asr/python/3.8.0_tf_2.3-v1-generic+cuda10.1/lib/python3.8/site-packages/tensorflow",
         ]
     ),
