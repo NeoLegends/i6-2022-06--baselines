@@ -26,7 +26,7 @@ def _generate_diphone_cart() -> typing.Tuple[gmm_system.GmmSystem, tk.Path, int]
     cart_di_args = gmm_setups.get_cart_args(
         name="cart_di", add_unknown=True, cart_with_stress=False, phones=2
     )
-    di_args = gmm_setups.get_triphone_args(name="tri_di")
+    di_args = gmm_setups.get_triphone_args()
     di_output_args = gmm_setups.get_final_output(name="di")
 
     steps = rasr_util.RasrSteps()
