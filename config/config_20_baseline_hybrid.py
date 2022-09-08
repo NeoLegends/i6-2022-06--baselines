@@ -216,7 +216,7 @@ def get_hybrid_args(
     }
     recognition_args = {
         "dev-other": {
-            "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 10)),
+            "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
             "feature_flow_key": "gt",
             "prior_scales": [0.3],
             "pronunciation_scales": [6.0],
