@@ -320,6 +320,7 @@ def get_hybrid_system(
     corpus_name: str,
     n_phones: int,
     gmm_system: GmmSystem,
+    gmm_diphone: typing.Optional[GmmSystem] = None,
     returnn_root: tk.Path,
     diphone_state_tying_file: typing.Optional[tk.Path] = None,
 ) -> HybridSystem:
@@ -346,7 +347,13 @@ def get_hybrid_system(
 
     # ******************** Train Prep ********************
 
-    train_output = gmm_system.outputs[corpus_name]["final"]
+    train_output = (
+        gmm_system.outputs[corpus_name]["tri"]
+        if n_phones == 3
+        else gmm_diphone.outputs[corpus_name]["di"]
+        if n_phones == 2
+        else gmm_system.outputs[corpus_name]["mono"]
+    )
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
         shuffle_data=True
@@ -443,7 +450,7 @@ def get_hybrid_system(
 def run(
     returnn_root: tk.Path,
     gmm_4gram: GmmSystem,
-    gmm_lstm: GmmSystem,
+    gmm_diphone: GmmSystem,
     diphone_cart: typing.Optional[tk.Path],
     diphone_cart_num_labels: typing.Optional[int],
 ) -> typing.Dict[str, HybridSystem]:
@@ -482,6 +489,7 @@ def run(
             system = get_hybrid_system(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
+                gmm_diphone=gmm_diphone,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
                 diphone_state_tying_file=diphone_cart,

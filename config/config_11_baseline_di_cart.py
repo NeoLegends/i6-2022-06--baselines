@@ -16,7 +16,7 @@ import i6_private.users.gunz.setups.ls.pipeline_gmm_args as gmm_setups
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as data_setups
 
 
-def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
+def _generate_diphone_cart() -> typing.Tuple[gmm_system.GmmSystem, tk.Path, int]:
     print(f"Diphone CART")
 
     train_data_inputs, dev_data_inputs, test_data_inputs = data_setups.get_data_inputs()
@@ -26,11 +26,15 @@ def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
     cart_di_args = gmm_setups.get_cart_args(
         name="cart_di", add_unknown=True, cart_with_stress=False, phones=2
     )
+    di_args = gmm_setups.get_triphone_args(name="tri_di")
+    di_output_args = gmm_setups.get_final_output(name="di")
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
     steps.add_step("cart", cart_di_args)
+    steps.add_step("tri", di_args)
+    steps.add_step("output", di_output_args)
 
     # ******************** GMM System ********************
 
@@ -47,10 +51,10 @@ def _generate_diphone_cart() -> typing.Tuple[tk.Path, int]:
     cart_lda: CartAndLDA = lbs_gmm_system.jobs["train-other-960"][
         "cart_and_lda_train-other-960_cart_di"
     ]
-    return cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
+    return lbs_gmm_system, cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
 
-def run() -> typing.Tuple[tk.Path, int]:
+def run() -> typing.Tuple[gmm_system.GmmSystem, tk.Path, int]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
