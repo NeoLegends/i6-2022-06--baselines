@@ -64,7 +64,7 @@ def _run_gmm(
     lbs_gmm_system.run(steps)
 
     cart_lda: CartAndLDA = lbs_gmm_system.jobs["train-other-960"][
-        "cart_and_lda_train-other-960_cart"
+        "cart_and_lda_train-other-960_mono"
     ]
     return lbs_gmm_system, cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
