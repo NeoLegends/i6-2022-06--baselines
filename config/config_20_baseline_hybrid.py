@@ -220,7 +220,7 @@ def get_hybrid_args(
             "feature_flow_key": "gt",
             "prior_scales": [0.3],
             "pronunciation_scales": [6.0],
-            "lm_scales": [20.0],
+            "lm_scales": [7.0],
             "lm_lookahead": True,
             "lookahead_options": None,
             "create_lattice": True,
