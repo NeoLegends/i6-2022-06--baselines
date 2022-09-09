@@ -519,4 +519,36 @@ def run(
 
             results[name] = system
 
+        if n_phone == 1:
+            name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-ep:{num_epochs}-lr:{lr}-gmm:mono"
+
+            gmm_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
+            test_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
+
+            with tk.block(name):
+                print(f"hy {name}")
+                system = get_hybrid_system(
+                    n_phones=n_phone,
+                    gmm_system=gmm_sys,
+                    test_system=test_sys,
+                    corpus_name=corpus_name,
+                    returnn_root=returnn_root,
+                )
+                nn_args = get_nn_args(
+                    gmm_system=gmm_sys,
+                    name=name,
+                    corpus_name=corpus_name,
+                    conf_size=conf_size,
+                    conf_num_heads=conf_num_heads,
+                    n_phones=n_phone,
+                    lr=lr,
+                    num_epochs=num_epochs,
+                )
+
+                steps = rasr_util.RasrSteps()
+                steps.add_step("nn", nn_args)
+                system.run(steps)
+
+                results[name] = system
+
     return results
