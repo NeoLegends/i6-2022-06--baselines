@@ -366,6 +366,8 @@ def get_hybrid_system(
         align = alignment_job.selected_alignment_jobs[-1].out_alignment_bundle
 
         nn_train_data.crp.acoustic_model_config.state_tying.type = "monophone"
+        nn_train_data.acoustic_mixtures = alignment_job.selected_mixture_jobs[-1].out_mixtures
+
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
