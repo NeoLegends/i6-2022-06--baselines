@@ -345,8 +345,7 @@ def get_hybrid_system(
 
     # ******************** Train Prep ********************
 
-    output_name = "tri" if n_phones == 3 else "di" if n_phones == 2 else "mono"
-    train_output = gmm_system.outputs[corpus_name][output_name]
+    train_output = gmm_system.outputs[corpus_name]["final"]
 
     nn_train_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input(
         shuffle_data=True
@@ -408,7 +407,7 @@ def get_hybrid_system(
         #    "final"
         # ].as_returnn_rasr_data_input(),
         "dev-other.dev": gmm_system.outputs["dev-other"][
-            output_name
+            "final"
         ].as_returnn_rasr_data_input(),
     }
     nn_test_data_inputs = {
@@ -416,7 +415,7 @@ def get_hybrid_system(
         #    "final"
         # ].as_returnn_rasr_data_input(),
         "test-other.test": gmm_system.outputs["test-other"][
-            output_name
+            "final"
         ].as_returnn_rasr_data_input(),
     }
 
@@ -452,7 +451,9 @@ def get_hybrid_system(
 
 def run(
     returnn_root: tk.Path,
-    gmm_4gram: GmmSystem,
+    gmm_mono: GmmSystem,
+    gmm_di: GmmSystem,
+    gmm_tri: GmmSystem,
 ) -> typing.Dict[str, HybridSystem]:
     # ******************** Settings ********************
 
@@ -462,7 +463,6 @@ def run(
     # ******************** HY Init ********************
 
     corpus_name = "train-other-960"
-    lm = {"4gram": gmm_4gram}  # , "lstm": gmm_lstm}
     lr = ["v4"]
     num_heads = [8]
     sizes = [256, 384, 512]
@@ -471,18 +471,18 @@ def run(
     results = {}
 
     for (
-        (lm, gmm_sys),
         n_phone,
         conf_size,
         conf_num_heads,
         lr,
         num_epochs,
-    ) in itertools.product(lm.items(), N_PHONES, sizes, num_heads, lr, num_epochs):
+    ) in itertools.product(N_PHONES, sizes, num_heads, lr, num_epochs):
         if conf_size % conf_num_heads != 0:
             print(f"{conf_size} does not work w/ {conf_num_heads} att heads, skipping")
             continue
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-ep:{num_epochs}-lr:{lr}"
+        gmm_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
 
         with tk.block(name):
             print(f"hy {name}")

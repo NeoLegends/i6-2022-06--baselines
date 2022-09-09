@@ -1,7 +1,9 @@
 import os
 
 # -------------------- Sisyphus --------------------
+import typing
 
+from i6_core.meta import CartAndLDA
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -16,9 +18,9 @@ import i6_private.users.gunz.setups.ls.pipeline_rasr_args as data_setups
 
 
 def _run_gmm(
-    lm: str, train_data_inputs, dev_data_inputs, test_data_inputs
-) -> gmm_system.GmmSystem:
-    print(f"GMM {lm} LM")
+    train_data_inputs, dev_data_inputs, test_data_inputs
+) -> typing.Tuple[gmm_system.GmmSystem, tk.Path, int]:
+    print(f"GMM Tri")
 
     mfcc_cepstrum_options = {
         "normalize": False,
@@ -38,26 +40,16 @@ def _run_gmm(
     )
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
-    mono_output_args = gmm_setups.get_final_output(name="mono")
-    cart_di_args = gmm_setups.get_cart_args(
-        name="cart_di", add_unknown=True, cart_with_stress=False, phones=2
-    )
-    di_args = gmm_setups.get_triphone_args(name="tri_di")
-    di_output_args = gmm_setups.get_final_output(name="di")
     cart_tri_args = gmm_setups.get_cart_args()
     tri_args = gmm_setups.get_triphone_args()
-    tri_output_args = gmm_setups.get_final_output(name="tri")
+    tri_output_args = gmm_setups.get_final_output()
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("output_mono", mono_output_args)
-    steps.add_step("cart_di", cart_di_args)
-    steps.add_step("tri_di", di_args)
-    steps.add_step("output_di", di_output_args)
-    steps.add_step("cart_tri", cart_tri_args)
+    steps.add_step("cart", cart_tri_args)
     steps.add_step("tri", tri_args)
-    steps.add_step("output_tri", tri_output_args)
+    steps.add_step("output", tri_output_args)
 
     # ******************** GMM System ********************
 
@@ -71,12 +63,13 @@ def _run_gmm(
     )
     lbs_gmm_system.run(steps)
 
-    return lbs_gmm_system
+    cart_lda: CartAndLDA = lbs_gmm_system.jobs["train-other-960"][
+        "cart_and_lda_train-other-960_cart"
+    ]
+    return lbs_gmm_system, cart_lda.last_cart_tree, cart_lda.last_num_cart_labels
 
 
-def run(
-    returnn_root: tk.Path, returnn_python_exe: tk.Path
-) -> [gmm_system.GmmSystem, gmm_system.GmmSystem]:
+def run() -> typing.Tuple[gmm_system.GmmSystem, tk.Path, int]:
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
@@ -84,14 +77,6 @@ def run(
 
     # ******************** GMM Init ********************
 
-    with tk.block("4gram"):
+    with tk.block("tri"):
         train_4gram, dev_4gram, test_4gram = data_setups.get_data_inputs()
-        gmm_4gram = _run_gmm("4gram", train_4gram, dev_4gram, test_4gram)
-
-    # with tk.block("lstm"):
-    #     train_lstm, dev_lstm, test_lstm = data_setups.get_data_inputs_lstm_lm(
-    #         returnn_root=returnn_root, returnn_python_exe=returnn_python_exe
-    #     )
-    #     gmm_lstm = _run_gmm("lstm", train_lstm, dev_lstm, test_lstm)
-
-    return gmm_4gram, None
+        return _run_gmm(train_4gram, dev_4gram, test_4gram)
