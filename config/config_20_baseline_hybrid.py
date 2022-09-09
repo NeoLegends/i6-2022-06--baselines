@@ -438,6 +438,12 @@ def get_hybrid_system(
         test_data=nn_test_data_inputs,
         train_cv_pairing=[tuple([f"{corpus_name}.train", f"{corpus_name}.cv"])],
     )
+    lbs_hy_system.crp[
+        "base"
+    ].acoustic_model_config.mixture_set.allow_zero_weights = True
+    lbs_hy_system.crp[
+        "base"
+    ].acoustic_model_config.old_mixture_set.allow_zero_weights = True
 
     return lbs_hy_system
 
