@@ -320,6 +320,7 @@ def get_hybrid_system(
     corpus_name: str,
     n_phones: int,
     gmm_system: GmmSystem,
+    test_system: GmmSystem,
     returnn_root: tk.Path,
 ) -> HybridSystem:
     assert n_phones in [1, 2, 3]
@@ -406,7 +407,7 @@ def get_hybrid_system(
         # "dev-clean": lbs_gmm_system.outputs["dev-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "dev-other.dev": gmm_system.outputs["dev-other"][
+        "dev-other.dev": test_system.outputs["dev-other"][
             "final"
         ].as_returnn_rasr_data_input(),
     }
@@ -414,7 +415,7 @@ def get_hybrid_system(
         # "test-clean": lbs_gmm_system.outputs["test-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "test-other.test": gmm_system.outputs["test-other"][
+        "test-other.test": test_system.outputs["test-other"][
             "final"
         ].as_returnn_rasr_data_input(),
     }
@@ -482,13 +483,15 @@ def run(
             continue
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-ep:{num_epochs}-lr:{lr}"
-        gmm_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
+        gmm_sys = gmm_tri if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
+        test_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
 
         with tk.block(name):
             print(f"hy {name}")
             system = get_hybrid_system(
                 n_phones=n_phone,
                 gmm_system=gmm_sys,
+                test_system=test_sys,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
             )

@@ -241,6 +241,7 @@ def run(returnn_root: tk.Path, gmm_4gram: GmmSystem) -> typing.Dict[str, HybridS
             system = get_hybrid_system(
                 n_phones=3,
                 gmm_system=gmm_4gram,
+                test_system=gmm_4gram,
                 corpus_name=corpus_name,
                 returnn_root=returnn_root,
             )
