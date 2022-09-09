@@ -483,6 +483,11 @@ def run(
             continue
 
         name = f"conf-ph:{n_phone}-dim:{conf_size}-h:{conf_num_heads}-ep:{num_epochs}-lr:{lr}"
+
+        # Hash Compat: We were training the monophone models from the triphone GMM, which lead some
+        # data we don't need to bleed into our config files. Technically we'd want to train from
+        # the monophone GMM, but this would change hashes now. We therefore train from the triphone
+        # GMM, and use the monophone GMM for evaluation.
         gmm_sys = gmm_tri if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
         test_sys = gmm_mono if n_phone == 1 else gmm_di if n_phone == 2 else gmm_tri
 
