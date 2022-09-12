@@ -1,3 +1,5 @@
+import copy
+
 from IPython import embed
 import itertools
 import os
@@ -207,11 +209,13 @@ def get_nn_args(
         batch_size=10000,
         lr=lr,
     )
+    fwd_config = copy.deepcopy(dict_cfg)
+    fwd_config.config["forward_output_layer"] = "output"
     nn_args = get_hybrid_args(
         name=name,
         num_outputs=n_outputs,
         training_cfg=dict_cfg,
-        fwd_cfg=dict_cfg,
+        fwd_cfg=fwd_config,
         num_epochs=num_epochs,
     )
 
