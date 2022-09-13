@@ -359,6 +359,13 @@ def get_hybrid_system(
     nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
 
+    nn_dev_other_data: ReturnnRasrDataInput = test_system.outputs["dev-other"][
+        "final"
+    ].as_returnn_rasr_data_input()
+    nn_test_other_data: ReturnnRasrDataInput = test_system.outputs["test-other"][
+        "final"
+    ].as_returnn_rasr_data_input()
+
     if n_phones == 1:
         alignment_job: AlignSplitAccumulateSequence = gmm_system.jobs[corpus_name][
             "train_mono"
@@ -370,6 +377,9 @@ def get_hybrid_system(
 
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
+
+        nn_dev_other_data.crp.acoustic_model_config.state_tying.type = "monophone"
+        nn_test_other_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
         cart_lda: CartAndLDA = gmm_system.jobs["train-other-960"][
             "cart_and_lda_train-other-960_cart_di"
@@ -409,17 +419,13 @@ def get_hybrid_system(
         # "dev-clean": lbs_gmm_system.outputs["dev-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "dev-other.dev": test_system.outputs["dev-other"][
-            "final"
-        ].as_returnn_rasr_data_input(),
+        "dev-other.dev": nn_dev_other_data,
     }
     nn_test_data_inputs = {
         # "test-clean": lbs_gmm_system.outputs["test-clean"][
         #    "final"
         # ].as_returnn_rasr_data_input(),
-        "test-other.test": test_system.outputs["test-other"][
-            "final"
-        ].as_returnn_rasr_data_input(),
+        "test-other.test": nn_test_other_data,
     }
 
     # ******************** System Init ********************
