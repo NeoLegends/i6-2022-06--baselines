@@ -214,33 +214,29 @@ def get_hybrid_args(
         "partition_epochs": {"train": 20, "dev": 1},
         "use_python_control": False,
     }
-
-    ls_recog_args = {
-        "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
-        "feature_flow_key": "gt",
-        "prior_scales": [0.3, 0.7],
-        "pronunciation_scales": [2.0, 6.0],
-        "lm_scales": [7.0, 20.0],
-        "lm_lookahead": True,
-        "lookahead_options": None,
-        "create_lattice": True,
-        "eval_single_best": True,
-        "eval_best_in_lattice": True,
-        "search_parameters": get_search_parameters(),
-        "lattice_to_ctm_kwargs": {
-            "fill_empty_segments": True,
-            "best_path_algo": "bellman-ford",
-        },
-        "optimize_am_lm_scale": True,
-        "rtf": 50,
-        "mem": 16,
-        "use_gpu": True,
-        "parallelize_conversion": True,
-    }
-
     recognition_args = {
-        "dev-clean": copy.deepcopy(ls_recog_args),
-        "dev-other": copy.deepcopy(ls_recog_args),
+        "dev-other": {
+            "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
+            "feature_flow_key": "gt",
+            "prior_scales": [0.3],
+            "pronunciation_scales": [6.0],
+            "lm_scales": [7.0],
+            "lm_lookahead": True,
+            "lookahead_options": None,
+            "create_lattice": True,
+            "eval_single_best": True,
+            "eval_best_in_lattice": True,
+            "search_parameters": get_search_parameters(),
+            "lattice_to_ctm_kwargs": {
+                "fill_empty_segments": True,
+                "best_path_algo": "bellman-ford",
+            },
+            "optimize_am_lm_scale": False,
+            "rtf": 50,
+            "mem": 16,
+            "use_gpu": True,
+            "parallelize_conversion": True,
+        },
     }
     test_recognition_args = None
 
@@ -383,9 +379,7 @@ def get_hybrid_system(
         align = alignment_job.selected_alignment_jobs[-1].out_alignment_bundle
 
         nn_train_data.crp.acoustic_model_config.state_tying.type = "monophone"
-        nn_train_data.acoustic_mixtures = alignment_job.selected_mixture_jobs[
-            -1
-        ].out_mixtures
+        nn_train_data.acoustic_mixtures = alignment_job.selected_mixture_jobs[-1].out_mixtures
 
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
