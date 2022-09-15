@@ -359,7 +359,13 @@ def get_hybrid_system(
     nn_devtrain_data: ReturnnRasrDataInput = train_output.as_returnn_rasr_data_input()
     nn_devtrain_data.update_crp_with(segment_path=devtrain_segments, concurrent=1)
 
+    nn_dev_clean_data: ReturnnRasrDataInput = test_system.outputs["dev-clean"][
+        "final"
+    ].as_returnn_rasr_data_input()
     nn_dev_other_data: ReturnnRasrDataInput = test_system.outputs["dev-other"][
+        "final"
+    ].as_returnn_rasr_data_input()
+    nn_test_clean_data: ReturnnRasrDataInput = test_system.outputs["test-clean"][
         "final"
     ].as_returnn_rasr_data_input()
     nn_test_other_data: ReturnnRasrDataInput = test_system.outputs["test-other"][
@@ -378,6 +384,8 @@ def get_hybrid_system(
         nn_devtrain_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_cv_data.crp.acoustic_model_config.state_tying.type = "monophone"
 
+        nn_dev_clean_data.crp.acoustic_model_config.state_tying.type = "monophone"
+        nn_test_clean_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_dev_other_data.crp.acoustic_model_config.state_tying.type = "monophone"
         nn_test_other_data.crp.acoustic_model_config.state_tying.type = "monophone"
     elif n_phones == 2:
@@ -416,15 +424,11 @@ def get_hybrid_system(
     # ******************** Test Prep ********************
 
     nn_dev_data_inputs = {
-        # "dev-clean": lbs_gmm_system.outputs["dev-clean"][
-        #    "final"
-        # ].as_returnn_rasr_data_input(),
+        "dev-clean.dev": nn_dev_clean_data,
         "dev-other.dev": nn_dev_other_data,
     }
     nn_test_data_inputs = {
-        # "test-clean": lbs_gmm_system.outputs["test-clean"][
-        #    "final"
-        # ].as_returnn_rasr_data_input(),
+        "test-clean.test": nn_test_clean_data,
         "test-other.test": nn_test_other_data,
     }
 
