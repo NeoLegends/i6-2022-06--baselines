@@ -215,28 +215,38 @@ def get_hybrid_args(
         "use_python_control": False,
     }
 
+    recog_base_args = {
+        "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
+        "feature_flow_key": "gt",
+        "prior_scales": [0.3],
+        "pronunciation_scales": [2.0, 6.0],
+        "lm_scales": [7.0, 20.0],
+        "lm_lookahead": True,
+        "lookahead_options": None,
+        "create_lattice": True,
+        "eval_single_best": True,
+        "eval_best_in_lattice": True,
+        "search_parameters": get_search_parameters(),
+        "lattice_to_ctm_kwargs": {
+            "fill_empty_segments": True,
+            "best_path_algo": "bellman-ford",
+        },
+        "optimize_am_lm_scale": False,
+        "rtf": 50,
+        "mem": 16,
+        "use_gpu": False,
+        "parallelize_conversion": True,
+    }
     recognition_args = {
-        "dev": {
-            "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
-            "feature_flow_key": "gt",
-            "prior_scales": [0.3],
-            "pronunciation_scales": [2.0, 6.0],
-            "lm_scales": [7.0, 20.0],
-            "lm_lookahead": True,
-            "lookahead_options": None,
-            "create_lattice": True,
-            "eval_single_best": True,
-            "eval_best_in_lattice": True,
-            "search_parameters": get_search_parameters(),
-            "lattice_to_ctm_kwargs": {
-                "fill_empty_segments": True,
-                "best_path_algo": "bellman-ford",
-            },
-            "optimize_am_lm_scale": False,
-            "rtf": 50,
-            "mem": 16,
-            "use_gpu": False,
-            "parallelize_conversion": True,
+        "scales-1": {
+            **recog_base_args,
+            "pronunciation_scales": [2.0],
+            "lm_scales": [7.0],
+        },
+        "scales-2": {
+            **recog_base_args,
+            "pronunciation_scales": [6.0],
+            "lm_scales": [20.0],
         },
     }
     test_recognition_args = None
