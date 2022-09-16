@@ -215,12 +215,10 @@ def get_hybrid_args(
         "use_python_control": False,
     }
 
-    recog_config = {
+    recog_base_config = {
         "epochs": list(np.arange(num_epochs // 2, num_epochs + 1, 50)),
         "feature_flow_key": "gt",
         "prior_scales": [0.3],
-        "pronunciation_scales": [2.0, 6.0],
-        "lm_scales": [7.0, 20.0],
         "lm_lookahead": True,
         "lookahead_options": None,
         "create_lattice": True,
@@ -238,8 +236,16 @@ def get_hybrid_args(
         "parallelize_conversion": True,
     }
     recognition_args = {
-        "dev-clean": copy.deepcopy(recog_config),
-        "dev-other": copy.deepcopy(recog_config),
+        "dev-clean": {
+            **recog_base_config,
+            "pronunciation_scales": [2.0],
+            "lm_scales": [7.0],
+        },
+        "dev-other": {
+            **recog_base_config,
+            "pronunciation_scales": [6.0],
+            "lm_scales": [20.0],
+        },
     }
     test_recognition_args = None
 
