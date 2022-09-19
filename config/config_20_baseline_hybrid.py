@@ -464,7 +464,15 @@ def get_hybrid_system(
         train_cv_pairing=[tuple([f"{corpus_name}.train", f"{corpus_name}.cv"])],
     )
 
-    for corpus in ["dev-other.dev", "test-other.test"]:
+    for corpus in [
+        "dev-clean.dev",
+        "dev-other.dev",
+        "test-other.test",
+        "test-clean.test",
+    ]:
+        if corpus not in lbs_hy_system.crp:
+            continue
+
         lbs_hy_system.crp[
             corpus
         ].acoustic_model_config.mixture_set.allow_zero_weights = True
