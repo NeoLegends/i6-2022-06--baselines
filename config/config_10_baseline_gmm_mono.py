@@ -46,8 +46,8 @@ def _run_gmm(
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
-    steps.add_step("cart", cart_mono_args)
     steps.add_step("output", mono_output_args)
+    steps.add_step("cart", cart_mono_args)
 
     # ******************** GMM System ********************
 
