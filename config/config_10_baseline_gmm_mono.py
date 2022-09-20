@@ -39,15 +39,11 @@ def _run_gmm(
 
     mono_args = gmm_setups.get_monophone_args(allow_zero_weights=True)
     mono_output_args = gmm_setups.get_final_output()
-    cart_mono_args = gmm_setups.get_cart_args(
-        name="cart_mono", add_unknown=True, cart_with_stress=False, phones=1
-    )
 
     steps = rasr_util.RasrSteps()
     steps.add_step("extract", init_args.feature_extraction_args)
     steps.add_step("mono", mono_args)
     steps.add_step("output", mono_output_args)
-    steps.add_step("cart", cart_mono_args)
 
     # ******************** GMM System ********************
 
