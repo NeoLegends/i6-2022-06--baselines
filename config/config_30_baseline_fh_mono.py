@@ -129,7 +129,7 @@ def run_(
     )
 
     # ---------------------- returnn config---------------
-    partition_epochs = copy.deepcopy(s.initial_nn_args["partition_epochs"])
+    partition_epochs = {"train": 20, "dev": 1}
     encoder_args = get_encoder_args(
         num_heads=conf_num_heads,
         key_dim_per_head=int(conf_size / conf_num_heads),
