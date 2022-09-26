@@ -186,7 +186,7 @@ def run_(
         },
     )
 
-    s.set_experiment_dict("fh", "gmm-mono", "mono", postfix_name=name)
+    s.set_experiment_dict("fh", "GMMmono", "mono", postfix_name=name)
 
     train_args = {
         **s.initial_train_args,
