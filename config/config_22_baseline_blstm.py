@@ -17,7 +17,9 @@ from i6_experiments.common.setups.rasr import GmmSystem
 from i6_experiments.common.setups.rasr.hybrid_system import HybridSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
 
-from .config_20_baseline_hybrid import get_hybrid_args, get_hybrid_system, get_lr_config
+from i6_private.users.gunz.setups.common.train_helpers import get_returnn_lr_config
+
+from .config_20_baseline_hybrid import get_hybrid_args, get_hybrid_system
 
 
 def get_returnn_config(
@@ -45,7 +47,7 @@ def get_returnn_config(
         "optimizer": {"class": "nadam"},
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
-        **get_lr_config(num_epochs=num_epochs, lr_schedule=lr),
+        **get_returnn_lr_config(num_epochs=num_epochs, lr_schedule=lr),
         "network": {
             "lstm_bwd_1": {
                 "L2": 0.01,
