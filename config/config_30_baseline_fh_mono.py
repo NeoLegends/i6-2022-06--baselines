@@ -187,6 +187,7 @@ def run_(
     )
 
     s.set_experiment_dict("fh", "GMMmono", "mono", postfix_name=name)
+    s.experiments["fh"]['returnn_config'] = copy.deepcopy(returnn_config)
 
     train_args = {
         **s.initial_train_args,
@@ -196,7 +197,7 @@ def run_(
     }
 
     s.returnn_rasr_training(
-        experiment_key=name,
+        experiment_key="fh",
         train_corpus_key=s.crp_names["train"],
         dev_corpus_key=s.crp_names["cvtrain"],
         nn_train_args=train_args,
