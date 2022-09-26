@@ -193,9 +193,6 @@ def run_(
         "returnn_config": returnn_config,
         "num_epochs": num_epochs,
         "partition_epochs": partition_epochs,
-        "keep_epochs": list(
-            range(num_epochs - (partition_epochs["train"] * 2), num_epochs + 1)
-        ),
     }
 
     s.returnn_rasr_training(
