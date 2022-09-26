@@ -1,7 +1,3 @@
-DIPHONE_CART = "/u/qliang/setups/no_cart_lbs/work/cart/estimate/EstimateCartJob.OQb5ZKHvccN6/output/cart.tree.xml.gz"
-DIPHONE_CART_STATS = "/u/qliang/setups/no_cart_lbs/work/cart/estimate/AccumulateCartStatisticsJob.oOEuB5QL5Q9b/output/cart.sum.xml.gz"
-DIPHONE_CART_NUM_LABELS = 4111
-
 N_PHONES = [1, 2, 3]
 RAISSI_ALIGNMENT = "/work/asr4/raissi/setups/librispeech/960-ls/work/i6_core/mm/alignment/AlignmentJob.hK21a0UU4iiJ/output/alignment.cache.bundle"
 
@@ -14,3 +10,7 @@ RETURNN_PYTHON_ROSSENBACH_TF23 = "/u/rossenbach/bin/returnn_tf2.3_launcher.sh"
 RETURNN_PYTHON_GENERIC_TF15 = (
     "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8"
 )
+
+CONF_NUM_HEADS = [8]
+CONF_SIZES = [256, 384, 512]
+CONF_NUM_TRAIN_EPOCHS = [300, 400, 500]

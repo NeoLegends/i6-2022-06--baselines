@@ -43,10 +43,13 @@ from .config import (
     RAISSI_ALIGNMENT,
     RASR_ROOT_2019,
     RETURNN_PYTHON_ROSSENBACH_TF15,
+    CONF_NUM_HEADS,
+    CONF_SIZES,
+    CONF_NUM_TRAIN_EPOCHS,
 )
 
-RASR_BINRARY_PATH = tk.Path(os.path.join(RASR_ROOT_2019, "arch", gs.RASR_ARCH))
-RASR_BINRARY_PATH.hash_override = "LS_RASR_PATH"
+RASR_BINARY_PATH = tk.Path(os.path.join(RASR_ROOT_2019, "arch", gs.RASR_ARCH))
+RASR_BINARY_PATH.hash_override = "LS_RASR_PATH"
 
 RETURNN_PYTHON_EXE = tk.Path(RETURNN_PYTHON_ROSSENBACH_TF15)
 RETURNN_PYTHON_EXE.hash_override = "LS_RETURNN_PYTHON_EXE"
@@ -61,65 +64,6 @@ def n_phones_to_str(n_phones: int) -> str:
         return "tri"
     else:
         raise ValueError(f"n_phones must be either 1, 2 or 3, not {n_phones}")
-
-
-def get_lr_config(num_epochs: int, lr_schedule: str = "v1"):
-    base = {
-        "learning_rate_file": "lr.log",
-        "min_learning_rate": 1e-6,
-    }
-
-    if lr_schedule == "v1":
-        # Taken from Chris Lüscher
-
-        return {
-            **base,
-            "learning_rates": list(np.linspace(3e-4, 8e-4, 10)),
-            "learning_rate_control": "newbob_multi_epoch",
-            "learning_rate_control_min_num_epochs_per_new_lr": 3,
-            "learning_rate_control_relative_error_relative_lr": True,
-            "newbob_learning_rate_decay": 0.9,
-            "newbob_multi_num_epochs": 40,
-            "newbob_multi_update_interval": 1,
-        }
-    elif lr_schedule == "v2":
-        # OneCycle: https://www-i6.informatik.rwth-aachen.de/publications/download/1204/Zhou--2022.pdf
-
-        lr_peak = 1e-4
-        rates = (
-            list(np.linspace(lr_peak / 10, lr_peak, int(num_epochs * 0.45)))
-            + list(np.linspace(lr_peak, lr_peak / 10, int(num_epochs * 0.45)))
-            + [1e-6]
-        )
-        return {
-            **base,
-            "learning_rates": rates,
-            "learning_rate_control": "constant",
-        }
-    elif lr_schedule == "v3":
-        # OneCycle from Wei
-
-        n = int(num_epochs * 0.45)
-        schedule = train_helpers.get_learning_rates(lrate=5e-5, increase=n, decay=n)
-
-        return {
-            **base,
-            "learning_rates": schedule,
-            "learning_rate_control": "constant",
-        }
-    elif lr_schedule == "v4":
-        # OneCycle from Wei
-
-        n = int(num_epochs * 0.45)
-        schedule = train_helpers.get_learning_rates(increase=n, decay=n)
-
-        return {
-            **base,
-            "learning_rates": schedule,
-            "learning_rate_control": "constant",
-        }
-    else:
-        raise ValueError(f"unknown LR {lr_schedule}")
 
 
 def get_returnn_config(
@@ -164,7 +108,7 @@ def get_returnn_config(
         "optimizer": {"class": "nadam"},
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
-        **get_lr_config(num_epochs=num_epochs, lr_schedule=lr),
+        **train_helpers.get_returnn_lr_config(num_epochs=num_epochs, lr_schedule=lr),
         "network": network,
     }
 
@@ -450,7 +394,7 @@ def get_hybrid_system(
     hybrid_init_args = lbs_data_setups.get_init_args()
 
     lbs_hy_system = HybridSystem(
-        rasr_binary_path=RASR_BINRARY_PATH,
+        rasr_binary_path=RASR_BINARY_PATH,
         returnn_root=returnn_root,
         returnn_python_exe=RETURNN_PYTHON_EXE,
     )
@@ -498,9 +442,9 @@ def run(
 
     corpus_name = "train-other-960"
     lr = ["v4"]
-    num_heads = [8]
-    sizes = [256, 384, 512]
-    num_epochs = [300, 400, 500]
+    num_heads = CONF_NUM_HEADS
+    sizes = CONF_SIZES
+    num_epochs = CONF_NUM_TRAIN_EPOCHS
 
     results = {}
 
