@@ -203,11 +203,11 @@ def run_(
         nn_train_args=train_args,
     )
 
-    """
     s.set_mono_priors(
         key=name, epoch=num_epochs - (partition_epochs["train"] * 2) + 1, hdf_key=None
     )
 
+    """
     if epochs is not None:
         for e in epochs:
             for crp_k in ["dev-other"]:
