@@ -14,7 +14,6 @@ import i6_core.returnn as returnn
 
 from i6_experiments.common.setups.rasr import GmmSystem
 import i6_experiments.common.setups.rasr.util as rasr_util
-import i6_experiments.users.raissi.setups.librispeech.factored_hybrid_system as fh_system
 
 import i6_private.users.gunz.setups.common.train_helpers as train_helpers
 from i6_private.users.gunz.setups.common.specaugment import (
@@ -23,6 +22,7 @@ from i6_private.users.gunz.setups.common.specaugment import (
     summary as sa_summary,
     transform as sa_transform,
 )
+import i6_private.users.gunz.setups.fh_ls.librispeech.factored_hybrid_system as fh_system
 import i6_private.users.gunz.setups.ls.pipeline_gmm_args as gmm_setups
 import i6_private.users.gunz.setups.ls.pipeline_rasr_args as lbs_data_setups
 import i6_private.users.gunz.system_librispeech.batch_sizes as batch_sizes
