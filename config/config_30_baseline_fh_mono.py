@@ -219,7 +219,10 @@ def run_(
             crp_corpus=crp_k,
             epoch=ep,
             num_encoder_output=conf_size,
+            gpu=False,
         )
+
+        del recog_args_mono["runOptJob"]
 
         args = itertools.product([18.0], [4.7, 5.0, 5.3], [0.6], [0.1], [20.0], [0.0])
         for beam, lm, t, p, exitSil, tdpExit in args:
