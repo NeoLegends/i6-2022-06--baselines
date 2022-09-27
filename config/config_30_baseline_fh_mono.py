@@ -1,5 +1,6 @@
 import copy
 import itertools
+import numpy as np
 import os
 from IPython import embed
 
@@ -207,29 +208,32 @@ def run_(
         key="fh", epoch=num_epochs - (partition_epochs["train"] * 2) + 1, hdf_key=None
     )
 
-    """
-    if epochs is not None:
-        for e in epochs:
-            for crp_k in ["dev-other"]:
-                recognizer, recog_args_mono = s.get_recognizer_and_args(
-                    key=key,
-                    context_type=s.contexts["mono"],
-                    crp_corpus=crp_k,
-                    epoch=e,
-                )
+    eval_epochs = list(np.arange(num_epochs // 2, num_epochs + 1, 50))
 
-                for beam in [18.0]:
-                    recog_args_mono["beam"] = beam
-                    recog_args_mono["lmScale"] = kw["lm"]
-                    for t in [kw["t"]]:
-                        for p in [kw["p"]]:
-                            for exitSil in [20.0]:
-                                for tdpExit in [0.0]:
-                                    recog_args_mono["silExit"] = exitSil
-                                    recog_args_mono["tdpExit"] = tdpExit
-                                    recog_args_mono["tdpScale"] = t
-                                    recog_args_mono["priorInfo"]["center-state-prior"][
-                                        "scale"
-                                    ] = p
-                                    recognizer.recognize_count_lm(**recog_args_mono)
-    """
+    for ep, crp_k in itertools.product(eval_epochs, ["dev-clean", "dev-other"]):
+        recognizer, recog_args_mono = s.get_recognizer_and_args(
+            key="fh",
+            context_type=s.contexts["mono"],
+            crp_corpus=crp_k,
+            epoch=ep,
+        )
+
+        args = itertools.product([18.0], [4.7, 5.0, 5.3], [0.6], [0.1], [20.0], [0.0])
+        for beam, lm, t, p, exitSil, tdpExit in args:
+            recognizer.recognize_count_lm(
+                {
+                    **recog_args_mono,
+                    "beam": beam,
+                    "lmScale": lm,
+                    "silExit": exitSil,
+                    "tdpExit": tdpExit,
+                    "tdpScale": t,
+                    "priorInfo": {
+                        **recog_args_mono["priorInfo"],
+                        "center-state-prior": {
+                            **recog_args_mono["priorInfo"]["center-state-prior"],
+                            "scale": p,
+                        },
+                    },
+                }
+            )
