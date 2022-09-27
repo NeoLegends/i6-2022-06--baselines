@@ -187,7 +187,7 @@ def run_(
     )
 
     s.set_experiment_dict("fh", "GMMmono", "mono", postfix_name=name)
-    s.experiments["fh"]['returnn_config'] = copy.deepcopy(returnn_config)
+    s.experiments["fh"]["returnn_config"] = copy.deepcopy(returnn_config)
 
     train_args = {
         **s.initial_train_args,
