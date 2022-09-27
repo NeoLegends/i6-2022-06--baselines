@@ -92,7 +92,7 @@ def run_(
         dev_data_inputs,
         test_data_inputs,
     ) = lbs_data_setups.get_data_inputs()
-    rasr_init_args = lbs_data_setups.get_init_args(dc_detection=False)
+    rasr_init_args = lbs_data_setups.get_init_args(gt_normalization=False)
     data_preparation_args = gmm_setups.get_final_output(name="data_preparation")
     # *********** System Instantiation *****************
     steps = rasr_util.RasrSteps()
