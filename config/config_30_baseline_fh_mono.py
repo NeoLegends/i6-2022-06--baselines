@@ -36,18 +36,18 @@ from i6_private.users.gunz.system_librispeech.transformer_network import (
 )
 
 from .config import (
-    RASR_ROOT_2019,
+    RASR_ROOT_FH,
     RETURNN_PYTHON_ROSSENBACH_TF15,
     CONF_SIZES,
     CONF_NUM_HEADS,
     CONF_NUM_TRAIN_EPOCHS,
 )
 
-RASR_BINARY_PATH = tk.Path(os.path.join(RASR_ROOT_2019, "arch", gs.RASR_ARCH))
-RASR_BINARY_PATH.hash_override = "LS_RASR_PATH"
+RASR_BINARY_PATH = tk.Path(os.path.join(RASR_ROOT_FH, "arch", gs.RASR_ARCH))
+RASR_BINARY_PATH.hash_override = "FH_RASR_PATH"
 
 RETURNN_PYTHON_EXE = tk.Path(RETURNN_PYTHON_ROSSENBACH_TF15)
-RETURNN_PYTHON_EXE.hash_override = "LS_RETURNN_PYTHON_EXE"
+RETURNN_PYTHON_EXE.hash_override = "FH_RETURNN_PYTHON_EXE"
 
 train_key = "train-other-960"
 
