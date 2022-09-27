@@ -54,6 +54,8 @@ SHOW_JOB_TARGETS = False
 PRINT_ERROR_TASKS = 0
 PRINT_ERROR_LINES = 10
 
+WARNING_ABSPATH = False
+
 RASR_ROOT = "/u/raissi/dev/rasr_tf14py38_fh/"
 # RASR_ROOT = '/work/tools/asr/rasr/20191102_generic/'
 # RASR_ROOT = '/u/raissi/dev/thesis-rasr-dense/'
