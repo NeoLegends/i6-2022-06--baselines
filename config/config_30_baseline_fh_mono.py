@@ -204,7 +204,7 @@ def run_(
     )
 
     s.set_mono_priors(
-        key=name, epoch=num_epochs - (partition_epochs["train"] * 2) + 1, hdf_key=None
+        key="fh", epoch=num_epochs - (partition_epochs["train"] * 2) + 1, hdf_key=None
     )
 
     """
