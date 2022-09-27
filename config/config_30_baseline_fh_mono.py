@@ -146,7 +146,9 @@ def run_(
         enc_args=encoder_args,
     )
     network = attention_for_hybrid(**network_args).get_network()
-    network["center-output"] = network.pop("output")
+
+    network["encoder-output"] = {"class": "copy", "from": ["encoder"]}
+    network["center-output"] = {**network.pop("output"), "from": ["encoder-output"]}
 
     base_config = {
         **s.initial_nn_args,
@@ -216,24 +218,25 @@ def run_(
             context_type=s.contexts["mono"],
             crp_corpus=crp_k,
             epoch=ep,
+            num_encoder_output=conf_size,
         )
 
         args = itertools.product([18.0], [4.7, 5.0, 5.3], [0.6], [0.1], [20.0], [0.0])
         for beam, lm, t, p, exitSil, tdpExit in args:
-            recognizer.recognize_count_lm(
-                {
-                    **recog_args_mono,
-                    "beam": beam,
-                    "lmScale": lm,
-                    "silExit": exitSil,
-                    "tdpExit": tdpExit,
-                    "tdpScale": t,
-                    "priorInfo": {
-                        **recog_args_mono["priorInfo"],
-                        "center-state-prior": {
-                            **recog_args_mono["priorInfo"]["center-state-prior"],
-                            "scale": p,
-                        },
+            recog_cfg = {
+                **recog_args_mono,
+                "beam": beam,
+                "lmScale": lm,
+                "silExit": exitSil,
+                "tdpExit": tdpExit,
+                "tdpScale": t,
+                "priorInfo": {
+                    **recog_args_mono["priorInfo"],
+                    "center-state-prior": {
+                        **recog_args_mono["priorInfo"]["center-state-prior"],
+                        "scale": p,
                     },
-                }
-            )
+                },
+            }
+
+            recognizer.recognize_count_lm(**recog_cfg)
