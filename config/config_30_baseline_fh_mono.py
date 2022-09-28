@@ -195,9 +195,6 @@ def run_(
         hash_full_python_code=True,
         python_prolog={"numpy": "import numpy as np"},
         python_epilog={
-            "dim_config": s.get_epilog_for_train(
-                specaug_args=None  # we do SpecAug manually
-            ),
             "functions": [
                 sa_mask,
                 sa_random_mask,
