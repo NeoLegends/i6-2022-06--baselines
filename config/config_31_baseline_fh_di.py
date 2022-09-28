@@ -14,8 +14,9 @@ import i6_core.returnn as returnn
 
 import i6_experiments.common.setups.rasr.util as rasr_util
 
-from i6_private.users.gunz.setups.fh_ls.common.helpers.pop_labels import (
+from i6_private.users.gunz.setups.fh_ls.common.helpers.network_augment import (
     augment_net_with_label_pops,
+    augment_net_with_monophone_outputs,
 )
 import i6_private.users.gunz.setups.common.train_helpers as train_helpers
 from i6_private.users.gunz.setups.common.specaugment import (
@@ -108,7 +109,7 @@ def run_(
     )
     s.train_key = train_key
     s.label_info.state_tying = "no-tying-dense"
-    s.label_info.use_boundary_classes = True # Fair compairson w/ CART hybrid
+    s.label_info.use_boundary_classes = True  # Fair compairson w/ CART hybrid
     s.label_info.use_word_end_classes = False
     s.run(steps)
 
@@ -146,11 +147,15 @@ def run_(
         num_enc_layers=12,
         enc_args=encoder_args,
     )
+
     network = attention_for_hybrid(**network_args).get_network()
-
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
-    network["center-output"] = {**network.pop("output"), "from": "encoder-output"}
-
+    network = augment_net_with_monophone_outputs(
+        network,
+        encoder_output_len=conf_size,
+        add_mlps=True,
+        final_ctx_type="triphone-forward",
+    )
     network = augment_net_with_label_pops(
         network,
         use_boundary_classes=True,

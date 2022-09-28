@@ -5,6 +5,9 @@ import os
 from IPython import embed
 
 # -------------------- Sisyphus --------------------
+from i6_private.users.gunz.setups.fh_ls.common.helpers.network_augment import (
+    augment_net_with_monophone_outputs,
+)
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -146,10 +149,12 @@ def run_(
         num_enc_layers=12,
         enc_args=encoder_args,
     )
-    network = attention_for_hybrid(**network_args).get_network()
 
+    network = attention_for_hybrid(**network_args).get_network()
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
-    network["center-output"] = {**network.pop("output"), "from": "encoder-output"}
+    network = augment_net_with_monophone_outputs(
+        network, encoder_output_len=conf_size, add_mlps=False, use_multi_task=False
+    )
 
     base_config = {
         **s.initial_nn_args,
