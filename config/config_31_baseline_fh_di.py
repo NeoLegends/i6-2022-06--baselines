@@ -166,11 +166,12 @@ def run_(
         encoder_output_len=conf_size,
         add_mlps=True,
         final_ctx_type="triphone-forward",
+        use_multi_task=False,
     )
     network = augment_net_with_diphone_outputs(
         network,
         encoder_output_len=conf_size,
-        use_multi_task=True,
+        use_multi_task=False,
         ph_emb_size=s.label_info.ph_emb_size,
         st_emb_size=s.label_info.st_emb_size,
     )
