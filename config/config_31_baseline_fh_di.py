@@ -17,6 +17,7 @@ import i6_experiments.common.setups.rasr.util as rasr_util
 from i6_private.users.gunz.setups.fh_ls.common.helpers.network_augment import (
     augment_net_with_label_pops,
     augment_net_with_monophone_outputs,
+    augment_net_with_diphone_outputs,
 )
 import i6_private.users.gunz.setups.common.train_helpers as train_helpers
 from i6_private.users.gunz.setups.common.specaugment import (
@@ -71,6 +72,10 @@ def run(returnn_root: tk.Path):
             num_epochs=num_epochs,
             lr="v4",
         )
+
+
+def augment_net_with_diphone_outputs(network, use_multi_task):
+    pass
 
 
 def run_(
@@ -150,17 +155,24 @@ def run_(
 
     network = attention_for_hybrid(**network_args).get_network()
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
+    network = augment_net_with_label_pops(
+        network,
+        n_contexts=s.label_info.n_contexts,
+        use_boundary_classes=True,
+        use_word_end_classes=False,
+    )
     network = augment_net_with_monophone_outputs(
         network,
         encoder_output_len=conf_size,
         add_mlps=True,
         final_ctx_type="triphone-forward",
     )
-    network = augment_net_with_label_pops(
+    network = augment_net_with_diphone_outputs(
         network,
-        use_boundary_classes=True,
-        n_contexts=s.label_info.n_contexts,
-        use_word_end_classes=False,
+        encoder_output_len=conf_size,
+        use_multi_task=True,
+        ph_emb_size=s.label_info.ph_emb_size,
+        st_emb_size=s.label_info.st_emb_size,
     )
 
     base_config = {
