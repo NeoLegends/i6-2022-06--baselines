@@ -178,11 +178,11 @@ def run_(
         config=base_config,
         post_config=base_post_config,
         hash_full_python_code=True,
+        python_prolog={"numpy": "import numpy as np"},
         python_epilog={
-            "numpy": "import numpy as np",
             "dim_config": s.get_epilog_for_train(
-                specaug_args=None
-            ),  # we do SpecAug manually
+                specaug_args=None  # we do SpecAug manually
+            ),
             "functions": [
                 sa_mask,
                 sa_random_mask,
