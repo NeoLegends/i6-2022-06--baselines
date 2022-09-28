@@ -153,7 +153,12 @@ def run_(
     network = attention_for_hybrid(**network_args).get_network()
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
     network = augment_net_with_monophone_outputs(
-        network, encoder_output_len=conf_size, add_mlps=False, use_multi_task=False
+        network,
+        encoder_output_len=conf_size,
+        add_mlps=False,
+        use_multi_task=False,
+        st_emb_size=0,
+        ph_emb_size=0,
     )
 
     base_config = {
@@ -172,6 +177,10 @@ def run_(
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
         "network": network,
+        "extern_data": {
+            "data": {"dim": 50},
+            "classes": {"dim": s.label_info.get_n_state_classes(), "sparse": True},
+        },
     }
     base_post_config = {
         "cleanup_old_models": {
