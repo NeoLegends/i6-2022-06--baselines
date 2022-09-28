@@ -75,10 +75,6 @@ def run(returnn_root: tk.Path):
         )
 
 
-def augment_net_with_diphone_outputs(network, use_multi_task):
-    pass
-
-
 def run_(
     *,
     alignment: tk.Path,
