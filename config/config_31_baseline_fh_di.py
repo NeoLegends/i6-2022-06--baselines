@@ -151,6 +151,7 @@ def run_(
     )
 
     network = attention_for_hybrid(**network_args).get_network()
+    network.pop("output")
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
     network = augment_net_with_label_pops(
         network,
@@ -189,6 +190,10 @@ def run_(
         "optimizer_epsilon": 1e-8,
         "gradient_noise": 0.1,
         "network": network,
+        "extern_data": {
+            "data": {"dim": 50},
+            "classes": {"dim": s.label_info.get_n_of_dense_classes(), "sparse": True},
+        },
     }
     base_post_config = {
         "cleanup_old_models": {
