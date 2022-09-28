@@ -14,7 +14,7 @@ import i6_experiments.common.setups.rasr.nn_system as nn_system
 import i6_experiments.common.setups.rasr.util as rasr_util
 
 
-def run(gmm: GmmSystem, returnn_root: tk.Path):
+def run(returnn_root: tk.Path):
     # ******************** Settings ********************
 
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]

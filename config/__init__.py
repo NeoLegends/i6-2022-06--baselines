@@ -38,5 +38,5 @@ def main():
 
     with tk.block("fh"):
         fh_mono.run(gmm=mono_sys, returnn_root=clone_r_job.out_repository)
-        fh_di.run(gmm=di_sys, returnn_root=clone_r_job.out_repository)
-        fh_tri.run(gmm=tri_sys, returnn_root=clone_r_job.out_repository)
+        fh_di.run(returnn_root=clone_r_job.out_repository)
+        fh_tri.run(returnn_root=clone_r_job.out_repository)
