@@ -38,6 +38,7 @@ def run(returnn_root: tk.Path):
     for conf_size, conf_num_heads, num_epochs in cfgs:
         run_(
             alignment=tk.Path(RAISSI_ALIGNMENT),
+            alignment_name="GMMtri",
             returnn_root=returnn_root,
             conf_size=conf_size,
             conf_num_heads=conf_num_heads,

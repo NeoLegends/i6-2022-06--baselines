@@ -68,6 +68,7 @@ def run(gmm: GmmSystem, returnn_root: tk.Path):
     for conf_size, conf_num_heads, num_epochs in cfgs:
         run_(
             alignment=align,
+            alignment_name="GMMmono",
             returnn_root=returnn_root,
             conf_size=conf_size,
             conf_num_heads=conf_num_heads,
@@ -79,6 +80,7 @@ def run(gmm: GmmSystem, returnn_root: tk.Path):
 def run_(
     *,
     alignment: tk.Path,
+    alignment_name: str,
     returnn_root: tk.Path,
     conf_size: int,
     conf_num_heads: int,
@@ -204,7 +206,7 @@ def run_(
         },
     )
 
-    s.set_experiment_dict("fh", "GMMmono", "mono", postfix_name=name)
+    s.set_experiment_dict("fh", alignment_name, "mono", postfix_name=name)
     s.experiments["fh"]["returnn_config"] = copy.deepcopy(returnn_config)
 
     train_args = {
