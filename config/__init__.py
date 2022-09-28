@@ -11,6 +11,7 @@ from . import (
     config_30_baseline_fh_mono as fh_mono,
     config_31_baseline_fh_di as fh_di,
     config_32_baseline_fh_tri as fh_tri,
+    config_33_baseline_fh_mono_from_tri as fh_mono_from_tri,
 )
 
 
@@ -40,3 +41,4 @@ def main():
         fh_mono.run(gmm=mono_sys, returnn_root=clone_r_job.out_repository)
         fh_di.run(returnn_root=clone_r_job.out_repository)
         fh_tri.run(returnn_root=clone_r_job.out_repository)
+        fh_mono_from_tri.run(returnn_root=clone_r_job.out_repository)
