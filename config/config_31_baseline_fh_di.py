@@ -14,6 +14,9 @@ import i6_core.returnn as returnn
 
 import i6_experiments.common.setups.rasr.util as rasr_util
 
+from i6_private.users.gunz.setups.fh_ls.common.helpers.pop_labels import (
+    augment_net_with_label_pops,
+)
 import i6_private.users.gunz.setups.common.train_helpers as train_helpers
 from i6_private.users.gunz.setups.common.specaugment import (
     mask as sa_mask,
@@ -105,7 +108,8 @@ def run_(
     )
     s.train_key = train_key
     s.label_info.state_tying = "no-tying-dense"
-    s.label_info.use_word_end_classes = True
+    s.label_info.use_boundary_classes = True # Fair compairson w/ CART hybrid
+    s.label_info.use_word_end_classes = False
     s.run(steps)
 
     # *********** Preparation of data input for rasr-returnn training *****************
@@ -144,8 +148,15 @@ def run_(
     )
     network = attention_for_hybrid(**network_args).get_network()
 
-    network["encoder-output"] = {"class": "copy", "from": ["encoder"]}
-    network["center-output"] = {**network.pop("output"), "from": ["encoder-output"]}
+    network["encoder-output"] = {"class": "copy", "from": "encoder"}
+    network["center-output"] = {**network.pop("output"), "from": "encoder-output"}
+
+    network = augment_net_with_label_pops(
+        network,
+        use_boundary_classes=True,
+        n_contexts=s.label_info.n_contexts,
+        use_word_end_classes=False,
+    )
 
     base_config = {
         **s.initial_nn_args,

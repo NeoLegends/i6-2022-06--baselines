@@ -148,8 +148,8 @@ def run_(
     )
     network = attention_for_hybrid(**network_args).get_network()
 
-    network["encoder-output"] = {"class": "copy", "from": ["encoder"]}
-    network["center-output"] = {**network.pop("output"), "from": ["encoder-output"]}
+    network["encoder-output"] = {"class": "copy", "from": "encoder"}
+    network["center-output"] = {**network.pop("output"), "from": "encoder-output"}
 
     base_config = {
         **s.initial_nn_args,
