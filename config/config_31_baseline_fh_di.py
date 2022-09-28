@@ -5,6 +5,7 @@ import os
 from IPython import embed
 
 # -------------------- Sisyphus --------------------
+from i6_private.users.gunz.setups.fh_ls.common.helpers.pipeline_data import ContextEnum
 from sisyphus import gs, tk, Path
 
 # -------------------- Recipes --------------------
@@ -165,7 +166,7 @@ def run_(
         network,
         encoder_output_len=conf_size,
         add_mlps=True,
-        final_ctx_type="triphone-forward",
+        final_ctx_type=ContextEnum.triphone_forward,
         use_multi_task=False,
     )
     network = augment_net_with_diphone_outputs(
