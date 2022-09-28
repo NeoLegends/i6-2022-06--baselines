@@ -108,7 +108,8 @@ def run_(
         test_data=test_data_inputs,
     )
     s.train_key = train_key
-    s.label_info.use_word_end_classes = True
+    s.label_info.use_boundary_classes = False
+    s.label_info.use_word_end_classes = False
     s.run(steps)
 
     # *********** Preparation of data input for rasr-returnn training *****************
