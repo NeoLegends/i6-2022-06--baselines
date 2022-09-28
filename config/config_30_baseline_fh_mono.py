@@ -43,6 +43,7 @@ from .config import (
     RETURNN_PYTHON_ROSSENBACH_TF15,
     CONF_SIZES,
     CONF_NUM_HEADS,
+    CONF_NUM_TRAIN_EPOCHS,
 )
 
 RASR_BINARY_PATH = tk.Path(os.path.join(RASR_ROOT_FH, "arch", gs.RASR_ARCH))
@@ -63,7 +64,7 @@ def run(gmm: GmmSystem, returnn_root: tk.Path):
     alignment_job: AlignSplitAccumulateSequence = gmm.jobs[train_key]["train_mono"]
     align = alignment_job.selected_alignment_jobs[-1].out_alignment_bundle
 
-    cfgs = itertools.product(CONF_SIZES, CONF_NUM_HEADS, [300])
+    cfgs = itertools.product(CONF_SIZES, CONF_NUM_HEADS, CONF_NUM_TRAIN_EPOCHS)
     for conf_size, conf_num_heads, num_epochs in cfgs:
         run_(
             alignment=align,

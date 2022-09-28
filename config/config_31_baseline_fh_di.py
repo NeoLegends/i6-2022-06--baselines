@@ -43,6 +43,7 @@ from .config import (
     RETURNN_PYTHON_ROSSENBACH_TF15,
     CONF_SIZES,
     CONF_NUM_HEADS,
+    CONF_NUM_TRAIN_EPOCHS,
     RAISSI_ALIGNMENT,
 )
 
@@ -61,7 +62,7 @@ def run(returnn_root: tk.Path):
     gs.ALIAS_AND_OUTPUT_SUBDIR = os.path.splitext(os.path.basename(__file__))[0][7:]
     rasr.flow.FlowNetwork.default_flags = {"cache_mode": "task_dependent"}
 
-    cfgs = itertools.product(CONF_SIZES, CONF_NUM_HEADS, [300])
+    cfgs = itertools.product(CONF_SIZES, CONF_NUM_HEADS, CONF_NUM_TRAIN_EPOCHS)
     for conf_size, conf_num_heads, num_epochs in cfgs:
         run_(
             alignment=tk.Path(RAISSI_ALIGNMENT),
