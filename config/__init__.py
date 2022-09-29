@@ -2,7 +2,7 @@ from sisyphus import gs, tk, Path
 
 import i6_core.tools as tools
 
-from . import (
+from i6_private.users.gunz.experiments.config_2022_07_baselines import (
     config_10_baseline_gmm_mono as mono,
     config_11_baseline_gmm_di as di,
     config_12_baseline_gmm_tri as tri,
