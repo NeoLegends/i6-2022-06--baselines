@@ -153,12 +153,6 @@ def run_(
     network = attention_for_hybrid(**network_args).get_network()
     network.pop("output")
     network["encoder-output"] = {"class": "copy", "from": "encoder"}
-    network = augment_net_with_label_pops(
-        network,
-        n_contexts=s.label_info.n_contexts,
-        use_boundary_classes=True,
-        use_word_end_classes=False,
-    )
     network = augment_net_with_monophone_outputs(
         network,
         encoder_output_len=conf_size,
