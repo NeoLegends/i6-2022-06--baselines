@@ -19,6 +19,7 @@ def gmm_and_hybrid():
         config_12_baseline_gmm_tri as tri,
         config_20_baseline_hybrid as hybrid,
         config_22_baseline_blstm as blyadstm,
+        config_23_baseline_hybrid_mono_recog as hybrid_recog,
     )
 
     returnn_root = _clone_returnn()
@@ -36,6 +37,12 @@ def gmm_and_hybrid():
             returnn_root=returnn_root,
         )
         blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
+        hybrid_recog.run(
+            gmm_mono=mono_sys,
+            gmm_di=di_sys,
+            gmm_tri=tri_sys,
+            returnn_root=returnn_root,
+        )
 
 
 def fh():
