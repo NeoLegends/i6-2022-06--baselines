@@ -62,7 +62,7 @@ def fh():
     with tk.block("fh"):
         fh_mono.run(gmm=mono_sys, returnn_root=returnn_root)
         fh_di.run(returnn_root=returnn_root)
-        # fh_tri.run(returnn_root=returnn_root)
+        fh_tri.run(returnn_root=returnn_root)
         fh_mono_from_tri.run(returnn_root=returnn_root)
 
 
