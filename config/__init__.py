@@ -49,16 +49,16 @@ def fh():
 
     returnn_root = _clone_returnn()
 
-    with tk.block("gmm"):
-        mono_sys = mono.run()
-
     with tk.block("fh"):
         fh_mono.run(returnn_root=returnn_root)
         fh_di.run(returnn_root=returnn_root)
         fh_tri.run(returnn_root=returnn_root)
+
+    with tk.block("fh-mono"):
+        mono_sys = mono.run()
         fh_mono_from_mono.run(gmm=mono_sys, returnn_root=returnn_root)
 
 
 def main():
-    gmm_and_hybrid()
     fh()
+    gmm_and_hybrid()
