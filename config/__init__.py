@@ -18,8 +18,7 @@ def gmm_and_hybrid():
         config_11_baseline_gmm_di as di,
         config_12_baseline_gmm_tri as tri,
         config_20_baseline_hybrid as hybrid,
-        config_22_baseline_blstm as blyadstm,
-        config_23_baseline_hybrid_mono_recog as hybrid_recog,
+        # config_22_baseline_blstm as blyadstm,
     )
 
     returnn_root = _clone_returnn()
@@ -36,13 +35,7 @@ def gmm_and_hybrid():
             gmm_tri=tri_sys,
             returnn_root=returnn_root,
         )
-        blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
-        hybrid_recog.run(
-            gmm_mono=mono_sys,
-            gmm_di=di_sys,
-            gmm_tri=tri_sys,
-            returnn_root=returnn_root,
-        )
+        # blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
 
 
 def fh():
@@ -51,7 +44,7 @@ def fh():
         config_30_baseline_fh_mono as fh_mono,
         config_31_baseline_fh_di as fh_di,
         config_32_baseline_fh_tri as fh_tri,
-        config_33_baseline_fh_mono_from_tri as fh_mono_from_tri,
+        config_33_baseline_fh_mono_from_mono as fh_mono_from_mono,
     )
 
     returnn_root = _clone_returnn()
@@ -60,10 +53,10 @@ def fh():
         mono_sys = mono.run()
 
     with tk.block("fh"):
-        fh_mono.run(gmm=mono_sys, returnn_root=returnn_root)
+        fh_mono.run(returnn_root=returnn_root)
         fh_di.run(returnn_root=returnn_root)
         fh_tri.run(returnn_root=returnn_root)
-        fh_mono_from_tri.run(returnn_root=returnn_root)
+        fh_mono_from_mono.run(gmm=mono_sys, returnn_root=returnn_root)
 
 
 def main():
