@@ -6,7 +6,7 @@ import i6_core.tools as tools
 def _clone_returnn() -> tk.Path:
     clone_r_job = tools.CloneGitRepositoryJob(
         url="https://github.com/rwth-i6/returnn.git",
-        commit="aadac2637ed6ec00925b9debf0dbd3c0ee20d6a6",
+        commit="e3123cdd7cab3de688127801d0dc52cc8122b703",
         checkout_folder_name="returnn",
     )
     return clone_r_job.out_repository
