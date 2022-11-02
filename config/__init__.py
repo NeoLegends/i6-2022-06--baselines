@@ -18,6 +18,7 @@ def gmm_and_hybrid():
         config_11_baseline_gmm_di as di,
         config_12_baseline_gmm_tri as tri,
         config_20_baseline_hybrid as hybrid,
+        config_21_baseline_hybrid_gmm_priors as hybrid_gmm_priors,
         # config_22_baseline_blstm as blyadstm,
     )
 
@@ -30,6 +31,12 @@ def gmm_and_hybrid():
 
     with tk.block("hybrid"):
         hybrid.run(
+            gmm_mono=mono_sys,
+            gmm_di=di_sys,
+            gmm_tri=tri_sys,
+            returnn_root=returnn_root,
+        )
+        hybrid_gmm_priors.run(
             gmm_mono=mono_sys,
             gmm_di=di_sys,
             gmm_tri=tri_sys,
