@@ -18,7 +18,6 @@ def gmm_and_hybrid():
         config_11_baseline_gmm_di as di,
         config_12_baseline_gmm_tri as tri,
         config_20_baseline_hybrid as hybrid,
-        config_21_baseline_hybrid_gmm_priors as hybrid_gmm_priors,
         # config_22_baseline_blstm as blyadstm,
     )
 
@@ -36,13 +35,32 @@ def gmm_and_hybrid():
             gmm_tri=tri_sys,
             returnn_root=returnn_root,
         )
+        # blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
+
+
+def gmm_prior_hybrid():
+    from i6_private.users.gunz.experiments.config_2022_07_baselines import (
+        config_10_baseline_gmm_mono as mono,
+        config_11_baseline_gmm_di as di,
+        config_12_baseline_gmm_tri as tri,
+        config_21_baseline_hybrid_gmm_priors as hybrid_gmm_priors,
+        # config_22_baseline_blstm as blyadstm,
+    )
+
+    returnn_root = _clone_returnn()
+
+    with tk.block("gmm"):
+        mono_sys = mono.run()
+        di_sys, cart_di, num_labels_di = di.run()
+        tri_sys, cart_tri, num_labels_tri = tri.run()
+
+    with tk.block("hybrid"):
         hybrid_gmm_priors.run(
             gmm_mono=mono_sys,
             gmm_di=di_sys,
             gmm_tri=tri_sys,
             returnn_root=returnn_root,
         )
-        # blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
 
 
 def fh():
