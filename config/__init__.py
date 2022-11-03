@@ -23,20 +23,19 @@ def gmm_and_hybrid():
 
     returnn_root = _clone_returnn()
 
-    for gt_n in [True, False]:
-        with tk.block("gmm"):
-            mono_sys = mono.run(gt_normalize=gt_n)
-            di_sys, cart_di, num_labels_di = di.run(gt_normalize=gt_n)
-            tri_sys, cart_tri, num_labels_tri = tri.run(gt_normalize=gt_n)
+    with tk.block("gmm"):
+        mono_sys = mono.run(gt_normalize=True)
+        di_sys, cart_di, num_labels_di = di.run(gt_normalize=True)
+        tri_sys, cart_tri, num_labels_tri = tri.run(gt_normalize=True)
 
-        with tk.block("hybrid"):
-            hybrid.run(
-                gmm_mono=mono_sys,
-                gmm_di=di_sys,
-                gmm_tri=tri_sys,
-                returnn_root=returnn_root,
-            )
-            # blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
+    with tk.block("hybrid"):
+        hybrid.run(
+            gmm_mono=mono_sys,
+            gmm_di=di_sys,
+            gmm_tri=tri_sys,
+            returnn_root=returnn_root,
+        )
+        # blyadstm.run(gmm_4gram=tri_sys, returnn_root=returnn_root)
 
 
 def gmm_prior_hybrid():
@@ -88,3 +87,4 @@ def fh():
 def main():
     fh()
     gmm_and_hybrid()
+    gmm_prior_hybrid()
