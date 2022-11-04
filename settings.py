@@ -38,11 +38,11 @@ def engine():
 
 MAIL_ADDRESS = getpass.getuser()
 
-# SIS_COMMAND = ['/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8', sys.argv[0]]
-SIS_COMMAND = [
-    "/work/asr3/rossenbach/schuemann/new_simple_tts_env/bin/python",
-    sys.argv[0],
-]
+SIS_COMMAND = ['/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8', sys.argv[0]]
+#SIS_COMMAND = [
+#    "/work/asr3/rossenbach/schuemann/new_simple_tts_env/bin/python",
+#    sys.argv[0],
+#]
 
 WAIT_PERIOD_CACHE = 8
 WAIT_PERIOD_JOB_FS_SYNC = 8
