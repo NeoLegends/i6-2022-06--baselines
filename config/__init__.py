@@ -65,7 +65,6 @@ def gmm_prior_hybrid():
 
 def fh():
     from i6_private.users.gunz.experiments.config_2022_07_baselines import (
-        config_10_baseline_gmm_mono as mono,
         config_30_baseline_fh_mono as fh_mono,
         config_31_baseline_fh_di as fh_di,
         config_32_baseline_fh_tri as fh_tri,
@@ -80,8 +79,9 @@ def fh():
         fh_tri.run(returnn_root=returnn_root)
 
     with tk.block("fh-mono"):
-        mono_sys = mono.run()
-        fh_mono_from_mono.run(gmm=mono_sys, returnn_root=returnn_root)
+        # alignment taken from GMM mono job above
+        align = tk.Path("/u/mgunz/setups/2022-07--baselines/work/i6_core/mm/alignment/AlignmentJob.lZiXlFMiSb0C/output/alignment.cache.bundle")
+        fh_mono_from_mono.run(align_gmm_or_path=align, returnn_root=returnn_root)
 
 
 def main():
