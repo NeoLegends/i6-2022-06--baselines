@@ -50,9 +50,9 @@ def gmm_prior_hybrid():
     returnn_root = _clone_returnn()
 
     with tk.block("gmm"):
-        mono_sys = mono.run(gt_normalize=False)
-        di_sys, cart_di, num_labels_di = di.run(gt_normalize=False)
-        tri_sys, cart_tri, num_labels_tri = tri.run(gt_normalize=False)
+        mono_sys = mono.run(gt_normalize=True)
+        di_sys, cart_di, num_labels_di = di.run(gt_normalize=True)
+        tri_sys, cart_tri, num_labels_tri = tri.run(gt_normalize=True)
 
     with tk.block("hybrid"):
         hybrid_gmm_priors.run(
