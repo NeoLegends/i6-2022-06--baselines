@@ -38,8 +38,12 @@ def engine():
 
 MAIL_ADDRESS = getpass.getuser()
 
+# SIS_COMMAND = [
+#     "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8",
+#     sys.argv[0],
+# ]
 SIS_COMMAND = [
-    "/work/tools/asr/python/3.8.0_tf_1.15-generic+cuda10.1/bin/python3.8",
+    "/u/mgunz/src/bin/returnn_tf1.15_launcher.sh",
     sys.argv[0],
 ]
 # SIS_COMMAND = [
